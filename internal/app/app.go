@@ -4,9 +4,12 @@ import (
 	"context"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"os"
 )
 
-func Serve(ctx context.Context, port string) error {
+func Serve(ctx context.Context) error {
+	port := os.Getenv("APP_PORT")
+
 	e := echo.New()
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, World!")

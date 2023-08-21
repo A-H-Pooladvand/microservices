@@ -6,6 +6,8 @@ import (
 	"os"
 )
 
+var Sugar *zap.SugaredLogger
+
 func Boot() {
 	stdout := zapcore.AddSync(os.Stdout)
 	file := zapcore.AddSync(FileRoller())
@@ -28,6 +30,8 @@ func Boot() {
 	)
 
 	logger := zap.New(core)
+
+	Sugar = logger.Sugar()
 
 	zap.ReplaceGlobals(logger)
 }
