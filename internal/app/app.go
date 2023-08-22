@@ -6,20 +6,22 @@ import (
 	"golang.org/x/sync/errgroup"
 	"os"
 	"os/signal"
-	"po/pkg/log"
+	"po/pkg/env"
 	"po/routes"
 	"time"
 )
 
-func Serve(ctx context.Context) {
+func Serve(ctx context.Context) error {
 	e := echo.New()
+	e.HideBanner = true
+
 	routes.Register(e)
 
 	group, ctx := errgroup.WithContext(ctx)
 
 	// Start the application
 	group.Go(func() error {
-		return e.Start(":8000")
+		return e.Start(":" + env.Get("APP_PORT", "8000"))
 	})
 
 	// Graceful shutdown
@@ -37,6 +39,8 @@ func Serve(ctx context.Context) {
 	})
 
 	if err := group.Wait(); err != nil {
-		log.Sugar.Error(err)
+		return err
 	}
+
+	return nil
 }
