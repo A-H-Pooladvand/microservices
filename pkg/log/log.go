@@ -29,9 +29,14 @@ func Boot() {
 		zapcore.NewCore(fileEncoder, file, level),
 	)
 
-	logger := zap.New(core)
+	logger := zap.New(
+		core,
+		zap.AddStacktrace(zapcore.ErrorLevel),
+		zap.AddCaller(),
+	)
 
 	Sugar = logger.Sugar()
 
 	zap.ReplaceGlobals(logger)
+
 }
