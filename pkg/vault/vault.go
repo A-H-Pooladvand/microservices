@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	vault "github.com/hashicorp/vault/api"
-	"os"
+	"po/pkg/env"
 )
 
 type Vault struct{}
@@ -16,7 +16,7 @@ func (v Vault) Boot(ctx context.Context) error {
 		return errors.New("context canceled")
 	default:
 		config := vault.DefaultConfig()
-		config.Address = os.Getenv("VAULT_ADDRESS")
+		config.Address = env.Get("VAULT_ADDRESS", "http://127.0.0.1:8200")
 
 		client, err := vault.NewClient(config)
 
@@ -26,7 +26,7 @@ func (v Vault) Boot(ctx context.Context) error {
 			)
 		}
 
-		client.SetToken("hvs.6ja7wvLDcakpK2EMh6WTUMeo")
+		client.SetToken(env.Get("VAULT_TOKEN", "hvs.6ja7wvLDcakpK2EMh6WTUMeo"))
 
 		return nil
 	}
