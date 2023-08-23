@@ -12,9 +12,10 @@ var bootstraps = []Booter{
 
 type Booter interface {
 	Boot(ctx context.Context) error
+	Shutdown() error
 }
 
-func Boot(ctx context.Context) error {
+func Boot(ctx context.Context) (*errgroup.Group, error) {
 	group, ctx := errgroup.WithContext(ctx)
 
 	for _, booter := range bootstraps {
@@ -24,9 +25,5 @@ func Boot(ctx context.Context) error {
 		})
 	}
 
-	if err := group.Wait(); err != nil {
-		return err
-	}
-
-	return nil
+	return group, nil
 }

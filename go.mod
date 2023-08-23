@@ -1,11 +1,10 @@
 module po
 
-go 1.20
+go 1.21
 
 require (
 	github.com/hashicorp/vault/api v1.9.2
 	github.com/labstack/echo/v4 v4.11.1
-	github.com/melf-xyzh/go-rsa v0.0.0-20220608013711-616a791704d6
 	go.uber.org/zap v1.25.0
 	golang.org/x/sync v0.3.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1

@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  app:
+    image: golang
+    container_name: app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      APP_PORT: 8000
+      VAULT_ADDRESS: http://127.0.0.1:8200
+      VAULT_TOKEN: something
+    volumes:
+      - ./build:/build
+    command: /build/app
