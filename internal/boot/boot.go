@@ -3,12 +3,9 @@ package boot
 import (
 	"context"
 	"golang.org/x/sync/errgroup"
-	"po/pkg/vault"
 )
 
-var bootstraps = []Booter{
-	vault.Vault{},
-}
+var bootstraps = []Booter{}
 
 type Booter interface {
 	Boot(ctx context.Context) error
@@ -24,6 +21,8 @@ func Boot(ctx context.Context) (*errgroup.Group, error) {
 			return b.Boot(ctx)
 		})
 	}
+
+	bootstraps = nil
 
 	return group, nil
 }

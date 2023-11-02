@@ -1,4 +1,4 @@
-package log
+package logger
 
 import (
 	"go.uber.org/zap"
@@ -36,5 +36,12 @@ func Boot() {
 	Sugar = logger.Sugar()
 
 	zap.ReplaceGlobals(logger)
+}
 
+func Error(args ...any) {
+	Sugar.Error(args...)
+}
+
+func Info(args ...any) {
+	Sugar.Info(args...)
 }

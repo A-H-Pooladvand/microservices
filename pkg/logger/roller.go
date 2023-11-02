@@ -1,4 +1,4 @@
-package log
+package logger
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 
 func FileRoller() io.Writer {
 	return &lumberjack.Logger{
-		Filename:   fmt.Sprintf("logs/%s.log", time.Now().Format("2006-01-02")),
+		Filename:   fmt.Sprintf("logs/%s.logger", time.Now().Format("2006-01-02")),
 		MaxSize:    2,  // megabytes
 		MaxAge:     30, // days
 		MaxBackups: 3,

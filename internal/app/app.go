@@ -6,12 +6,13 @@ import (
 	"golang.org/x/sync/errgroup"
 	"os"
 	"os/signal"
-	"po/pkg/env"
+	"po/configs"
 	"po/routes"
 	"time"
 )
 
 func Serve(ctx context.Context) error {
+	c := configs.NewApp()
 	e := echo.New()
 	e.HideBanner = true
 
@@ -21,7 +22,7 @@ func Serve(ctx context.Context) error {
 
 	// Start the application
 	group.Go(func() error {
-		return e.Start(":" + env.Get("APP_PORT", "8000"))
+		return e.Start(":" + c.Port)
 	})
 
 	// Graceful shutdown
