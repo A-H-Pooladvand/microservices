@@ -9,6 +9,7 @@ import (
 var Sugar *zap.SugaredLogger
 
 func Boot() {
+
 	stdout := zapcore.AddSync(os.Stdout)
 	file := zapcore.AddSync(FileRoller())
 
@@ -44,4 +45,16 @@ func Error(args ...any) {
 
 func Info(args ...any) {
 	Sugar.Info(args...)
+}
+
+func Fatal(args ...any) {
+	Sugar.Fatal(args...)
+}
+
+func Panic(args ...any) {
+	Sugar.Panic(args...)
+}
+
+func Fatalf(template string, args ...any) {
+	Sugar.Fatalf(template, args...)
 }

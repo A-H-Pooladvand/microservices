@@ -6,19 +6,26 @@ import (
 	"golang.org/x/sync/errgroup"
 	"os"
 	"os/signal"
-	"po/configs"
+	"po/cfg"
+	"po/pkg/logger"
 	"po/routes"
 	"time"
 )
 
-func Serve(ctx context.Context) error {
-	c := configs.NewApp()
+type App struct{}
+
+func New() *App {
+	return &App{}
+}
+
+func (a *App) Serve(ctx Context) error {
+	c := cfg.NewApp()
 	e := echo.New()
 	e.HideBanner = true
 
 	routes.Register(e)
 
-	group, ctx := errgroup.WithContext(ctx)
+	group, TODO := errgroup.WithContext(ctx)
 
 	// Start the application
 	group.Go(func() error {
@@ -33,15 +40,19 @@ func Serve(ctx context.Context) error {
 		signal.Notify(quit, os.Interrupt)
 		<-quit
 
-		ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		TODO, cancel := context.WithTimeout(TODO, 10*time.Second)
 		defer cancel()
 
-		return e.Shutdown(ctx)
+		return e.Shutdown(TODO)
 	})
 
-	if err := group.Wait(); err != nil {
-		return err
-	}
+	return group.Wait()
+}
 
-	return nil
+// Recover Recovers from panic
+func (a *App) Recover(cancel context.CancelFunc) {
+	if r := recover(); r != nil {
+		cancel()
+		logger.Panic(r)
+	}
 }

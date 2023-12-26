@@ -1,6 +1,6 @@
 package mysql
 
-import "po/configs"
+import "po/cfg"
 
 type Config struct {
 	Host     string
@@ -27,7 +27,7 @@ func NewConfig(
 }
 
 func NewEnvConfig() Config {
-	c := configs.NewMysql()
+	c := cfg.NewMysql()
 
 	return Config{
 		Host:     c.Host,
