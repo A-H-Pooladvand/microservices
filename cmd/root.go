@@ -1,13 +1,14 @@
 package cmd
 
 import (
+	"context"
+	"fmt"
 	"github.com/spf13/cobra"
-	"google.golang.org/grpc"
-	"log"
-	"net"
-	"po/api/proto/ping/v1"
-	"po/internal/handlers"
-	"po/pkg/logger"
+	"golang.org/x/sync/errgroup"
+	"po/internal/app"
+	"po/internal/grpc"
+	"po/internal/providers"
+	"po/pkg/zlog"
 )
 
 var cmd = &cobra.Command{
@@ -17,20 +18,48 @@ var cmd = &cobra.Command{
 }
 
 func Execute() {
-	logger.Boot()
+	zlog.Boot()
 
-	lis, err := net.Listen("tcp", ":8500")
-	if err != nil {
-		logger.Fatalf("failed to listen: %v", err)
+	ctx, cancel := app.WithCancel()
+	defer cancel()
+
+	defer panicRecover(cancel)
+
+	// Boot third party services
+	if err := providers.Boot(ctx); err != nil {
+		zlog.Panic(err)
 	}
-	s := grpc.NewServer()
-	ping.RegisterPingServiceServer(s, &handlers.Ping{})
 
-	if err = s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+	// Serve necessary protocols such as gRPC, HTTP etc...
+	cmd.Run = func(cmd *cobra.Command, args []string) {
+		if err := serve(ctx); err != nil {
+			zlog.Panic(err)
+		}
 	}
 
-	if err = cmd.Execute(); err != nil {
-		logger.Fatal(err)
+	if err := cmd.Execute(); err != nil {
+		zlog.Fatal(err)
+	}
+}
+
+func serve(ctx app.Context) error {
+	g, _ := errgroup.WithContext(ctx)
+
+	g.Go(func() error {
+		return grpc.Serve(ctx)
+	})
+
+	g.Go(func() error {
+		return app.New().Serve(ctx)
+	})
+
+	return g.Wait()
+}
+
+func panicRecover(cancel context.CancelFunc) {
+	if r := recover(); r != nil {
+		fmt.Println("Hello World")
+		cancel()
+		zlog.Panic(r)
 	}
 }

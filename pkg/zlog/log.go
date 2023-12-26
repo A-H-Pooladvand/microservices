@@ -1,4 +1,4 @@
-package logger
+package zlog
 
 import (
 	"go.uber.org/zap"
@@ -9,7 +9,6 @@ import (
 var Sugar *zap.SugaredLogger
 
 func Boot() {
-
 	stdout := zapcore.AddSync(os.Stdout)
 	file := zapcore.AddSync(FileRoller())
 

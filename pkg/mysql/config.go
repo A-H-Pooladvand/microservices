@@ -1,7 +1,5 @@
 package mysql
 
-import "po/cfg"
-
 type Config struct {
 	Host     string
 	Port     string
@@ -27,13 +25,6 @@ func NewConfig(
 }
 
 func NewEnvConfig() Config {
-	c := cfg.NewMysql()
 
-	return Config{
-		Host:     c.Host,
-		Port:     c.Port,
-		Username: c.Username,
-		Password: c.Password,
-		Database: c.Database,
-	}
+	return Config{}
 }
