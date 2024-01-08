@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"context"
-	"fmt"
+	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 	"po/internal/app"
@@ -18,7 +18,16 @@ var cmd = &cobra.Command{
 }
 
 func Execute() {
+	// First it's mandatory to load our logger service
+	// before any other thing
 	zlog.Boot()
+
+	// Todo:: Load generic environments from docker
+	// Todo:: Load secrets from Vault service
+	// Load .env file
+	if err := godotenv.Load(); err != nil {
+		zlog.Panic(err)
+	}
 
 	ctx, cancel := app.WithCancel()
 	defer cancel()
@@ -38,7 +47,7 @@ func Execute() {
 	}
 
 	if err := cmd.Execute(); err != nil {
-		zlog.Fatal(err)
+		zlog.Panic(err)
 	}
 }
 
@@ -58,7 +67,6 @@ func serve(ctx app.Context) error {
 
 func panicRecover(cancel context.CancelFunc) {
 	if r := recover(); r != nil {
-		fmt.Println("Hello World")
 		cancel()
 		zlog.Panic(r)
 	}

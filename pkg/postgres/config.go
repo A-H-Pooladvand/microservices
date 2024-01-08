@@ -1,11 +1,14 @@
-package mysql
+package postgres
+
+import "time"
 
 type Config struct {
 	Host     string
 	Port     string
 	Username string
 	Password string
-	Database string
+	DB       string
+	Timeout  time.Duration
 }
 
 func NewConfig(
@@ -13,18 +16,15 @@ func NewConfig(
 	port string,
 	username string,
 	password string,
-	database string,
-) *Config {
-	return &Config{
+	db string,
+	timeout int,
+) Config {
+	return Config{
 		Host:     host,
 		Port:     port,
 		Username: username,
 		Password: password,
-		Database: database,
+		DB:       db,
+		Timeout:  time.Second * time.Duration(timeout),
 	}
-}
-
-func NewEnvConfig() Config {
-
-	return Config{}
 }

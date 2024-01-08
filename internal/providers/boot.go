@@ -3,16 +3,14 @@ package providers
 import "po/internal/app"
 
 var providers = []Booter{
-	&Vault{},
+	//Vault,
 }
 
-type Booter interface {
-	Boot(ctx app.Context) error
-}
+type Booter func(ctx app.Context) error
 
 func Boot(ctx app.Context) error {
-	for _, provider := range providers {
-		if err := provider.Boot(ctx); err != nil {
+	for _, fn := range providers {
+		if err := fn(ctx); err != nil {
 			return err
 		}
 	}
