@@ -1,9 +1,9 @@
 package db
 
 import (
+	"go.uber.org/zap"
 	"po/cfg"
 	"po/pkg/postgres"
-	"po/pkg/zlog"
 )
 
 func New() *postgres.Client {
@@ -21,7 +21,7 @@ func New() *postgres.Client {
 	)
 
 	if err != nil {
-		zlog.Panic(err)
+		zap.L().Panic("err", zap.Error(err))
 	}
 
 	return c

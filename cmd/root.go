@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	"po/internal/app"
 	"po/internal/grpc"
@@ -26,7 +27,7 @@ func Execute() {
 	// Todo:: Load secrets from Vault service
 	// Load .env file
 	if err := godotenv.Load(); err != nil {
-		zlog.Panic(err)
+		zap.L().Panic("unable to load .env file", zap.Error(err))
 	}
 
 	ctx, cancel := app.WithCancel()
@@ -36,18 +37,18 @@ func Execute() {
 
 	// Boot third party services
 	if err := providers.Boot(ctx); err != nil {
-		zlog.Panic(err)
+		zap.L().Panic("unable to boot service", zap.Error(err))
 	}
 
 	// Serve necessary protocols such as gRPC, HTTP etc...
 	cmd.Run = func(cmd *cobra.Command, args []string) {
 		if err := serve(ctx); err != nil {
-			zlog.Panic(err)
+			zap.L().Panic("err to serve necessary protocols such as gRPC, HTTP etc", zap.Error(err))
 		}
 	}
 
 	if err := cmd.Execute(); err != nil {
-		zlog.Panic(err)
+		zap.L().Panic("err", zap.Error(err))
 	}
 }
 
@@ -68,6 +69,6 @@ func serve(ctx app.Context) error {
 func panicRecover(cancel context.CancelFunc) {
 	if r := recover(); r != nil {
 		cancel()
-		zlog.Panic(r)
+		zap.L().Panic("recover", zap.Any("recover", r))
 	}
 }
