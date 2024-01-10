@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -18,6 +19,18 @@ var (
 type Client struct {
 	config     Config
 	connection *gorm.DB
+}
+
+func (c *Client) Shutdown() error {
+	fmt.Println("Shutting down logstash client")
+
+	db, err := c.connection.DB()
+
+	if err != nil {
+		return err
+	}
+
+	return db.Close()
 }
 
 func New(config Config) (*Client, error) {
@@ -54,10 +67,14 @@ func New(config Config) (*Client, error) {
 			case <-time.After(500 * time.Millisecond):
 				continue
 			case <-ctx.Done():
+				err = errors.New("unable to connect to postgres client, context deadline exceeded")
 				return
 			}
 		}
 	})
+
+	// There is no need to check if err != nil
+	//since we return both client and err
 
 	return c, err
 }

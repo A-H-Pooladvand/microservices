@@ -1,9 +1,12 @@
 package providers
 
-import "po/internal/app"
+import (
+	"po/internal/app"
+)
 
 var providers = []Booter{
 	//Vault,
+	Postgres,
 }
 
 type Booter func(ctx app.Context) error

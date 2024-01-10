@@ -9,12 +9,13 @@ import (
 	"po/internal/app"
 	"po/internal/grpc"
 	"po/internal/providers"
+	"po/internal/webserver"
 	"po/pkg/zlog"
 )
 
 var cmd = &cobra.Command{
-	Use:   "app",
-	Short: "app",
+	Use:   "webserver",
+	Short: "webserver",
 	Long:  `Initializing...`,
 }
 
@@ -60,7 +61,7 @@ func serve(ctx app.Context) error {
 	})
 
 	g.Go(func() error {
-		return app.New().Serve(ctx)
+		return webserver.New().Serve(ctx)
 	})
 
 	return g.Wait()
@@ -69,6 +70,7 @@ func serve(ctx app.Context) error {
 func panicRecover(cancel context.CancelFunc) {
 	if r := recover(); r != nil {
 		cancel()
-		zap.L().Panic("recover", zap.Any("recover", r))
+		zap.L().Error("panic recovery", zap.Any("panic message", r))
+		app.Get().GracefulShutdown()
 	}
 }

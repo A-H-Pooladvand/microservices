@@ -11,7 +11,7 @@ import (
 func Vault(ctx app.Context) error {
 	config := vault.NewConfig(
 		"http://127.0.0.1:8200",
-		"demo-web-app",
+		"demo-web-webserver",
 		"/tmp/secret",
 		"api-key",
 		"kv-v2",

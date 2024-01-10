@@ -2,7 +2,6 @@ package zlog
 
 import (
 	"fmt"
-	"go.elastic.co/ecszap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"time"
@@ -19,8 +18,4 @@ func FileWriter() zapcore.WriteSyncer {
 	}
 
 	return zapcore.AddSync(l)
-}
-
-func FileEncoder() ecszap.EncoderConfig {
-	return ecszap.NewDefaultEncoderConfig()
 }

@@ -4,13 +4,22 @@ import (
 	"go.elastic.co/ecszap"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"os"
+	"po/pkg/logstash"
 )
 
 func Boot() {
+	ls := zapcore.AddSync(
+		logstash.Get().Conn,
+	)
+
 	core := zapcore.NewTee(
-		zapcore.NewCore(StdoutEncoder(), StdoutWriter(), zap.NewAtomicLevelAt(zap.DebugLevel)),
-		ecszap.NewCore(FileEncoder(), FileWriter(), zap.NewAtomicLevelAt(zap.InfoLevel)),
-		ecszap.NewCore(LogstashEncoder(), LogstashWriter(), zap.NewAtomicLevelAt(zap.InfoLevel)),
+		// Stdout Writer
+		zapcore.NewCore(StdoutEncoder(), zapcore.AddSync(os.Stdout), zap.NewAtomicLevelAt(zap.DebugLevel)),
+		// File Writer
+		ecszap.NewCore(ecszap.NewDefaultEncoderConfig(), FileWriter(), zap.NewAtomicLevelAt(zap.InfoLevel)),
+		// Logstash Writer
+		ecszap.NewCore(ecszap.NewDefaultEncoderConfig(), ls, zap.NewAtomicLevelAt(zap.InfoLevel)),
 	)
 
 	logger := zap.New(
