@@ -33,6 +33,10 @@ func NewSingleton() (*Client, error) {
 		client = c
 	})
 
+	if err != nil {
+		panic(err)
+	}
+
 	return client, err
 }
 

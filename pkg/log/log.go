@@ -1,6 +1,7 @@
-package zlog
+package log
 
 import (
+	"go.elastic.co/apm/module/apmzap/v2"
 	"go.elastic.co/ecszap"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -26,6 +27,7 @@ func Boot() {
 		core,
 		zap.AddStacktrace(zapcore.ErrorLevel),
 		zap.AddCaller(),
+		zap.WrapCore((&apmzap.Core{}).WrapCore),
 	)
 
 	zap.ReplaceGlobals(logger)

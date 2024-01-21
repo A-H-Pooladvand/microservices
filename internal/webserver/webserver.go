@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/labstack/echo/v4"
+	"go.elastic.co/apm/module/apmechov4/v2"
 	"net/http"
 	"os"
 	"os/signal"
@@ -22,6 +23,7 @@ func New() *Webserver {
 func (a *Webserver) Serve(ctx app.Context) error {
 	c := cfg.NewApp()
 	e := echo.New()
+	e.Use(apmechov4.Middleware())
 	e.HideBanner = true
 
 	routes.Register(e)

@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"github.com/joho/godotenv"
+	golog "github.com/labstack/gommon/log"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
@@ -10,7 +11,7 @@ import (
 	"po/internal/grpc"
 	"po/internal/providers"
 	"po/internal/webserver"
-	"po/pkg/zlog"
+	"po/pkg/log"
 )
 
 var cmd = &cobra.Command{
@@ -22,7 +23,12 @@ var cmd = &cobra.Command{
 func Execute() {
 	// First it's mandatory to load our logger service
 	// before any other thing
-	zlog.Boot()
+	log.Boot()
+	defer func(l *zap.Logger) {
+		if err := l.Sync(); err != nil {
+			golog.Error(err)
+		}
+	}(zap.L())
 
 	// Todo:: Load generic environments from docker
 	// Todo:: Load secrets from Vault service
@@ -71,6 +77,7 @@ func panicRecover(cancel context.CancelFunc) {
 	if r := recover(); r != nil {
 		cancel()
 		zap.L().Error("panic recovery", zap.Any("panic message", r))
+		_ = zap.L().Sync()
 		app.Get().GracefulShutdown()
 	}
 }
