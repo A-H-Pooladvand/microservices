@@ -3,6 +3,7 @@ package webserver
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"go.elastic.co/apm/module/apmechov4/v2"
 	"net/http"
@@ -26,8 +27,11 @@ func (a *Webserver) Serve(ctx context.Context) error {
 	e.Use(middlewares.Context)
 	e.Use(apmechov4.Middleware())
 	e.HideBanner = true
+	e.HidePort = true
 
 	routes.Register(e)
+
+	fmt.Printf("⇨ http server started on http://127.0.0.1:%v\n", c.Port)
 
 	if err := e.Start(":" + c.Port); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		e.Logger.Fatal("shutting down the server")
