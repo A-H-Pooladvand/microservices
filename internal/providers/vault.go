@@ -1,14 +1,14 @@
 package providers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
-	"po/internal/app"
 	"po/pkg/vault"
 )
 
-func Vault(ctx app.Context) error {
+func Vault(ctx context.Context) error {
 	config := vault.NewConfig(
 		"http://127.0.0.1:8200",
 		"demo-web-webserver",

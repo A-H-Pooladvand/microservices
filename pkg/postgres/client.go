@@ -19,12 +19,15 @@ var (
 type Client struct {
 	config     Config
 	connection *gorm.DB
+	mu         *sync.RWMutex
 }
 
 func (c *Client) Shutdown() error {
 	fmt.Println("Shutting down logstash client")
 
+	c.mu.RLock()
 	db, err := c.connection.DB()
+	c.mu.RUnlock()
 
 	if err != nil {
 		return err
@@ -42,20 +45,20 @@ func New(config Config) (*Client, error) {
 
 		c = &Client{
 			config: config,
+			mu:     &sync.RWMutex{},
 		}
 
 		db, err := gorm.Open(c.dialect(), &gorm.Config{})
 
 		if err != nil {
-			return
+			err = fmt.Errorf("failed to open database connection: %w", err)
 		}
 
 		c.connection = db
-
 		connection, err := db.DB()
 
 		if err != nil {
-			return
+			err = fmt.Errorf("failed to get underlying database connection: %w", err)
 		}
 
 		for {
@@ -67,16 +70,15 @@ func New(config Config) (*Client, error) {
 			case <-time.After(500 * time.Millisecond):
 				continue
 			case <-ctx.Done():
+				defer connection.Close()
 				err = errors.New("unable to connect to postgres client, context deadline exceeded")
 				return
 			}
 		}
 	})
 
-	// There is no need to check if err != nil
-	//since we return both client and err
-
 	return c, err
+
 }
 
 func (c *Client) dsn() string {
@@ -95,6 +97,9 @@ func (c *Client) dialect() gorm.Dialector {
 }
 
 func (c *Client) DB() *sql.DB {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
 	db, _ := c.connection.DB()
 
 	return db
@@ -102,4 +107,24 @@ func (c *Client) DB() *sql.DB {
 
 func (c *Client) Ping() error {
 	return c.DB().Ping()
+}
+
+func (c *Client) Debug() *Client {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.connection = c.connection.Debug()
+
+	return c
+}
+
+func (c *Client) AutoMigrate(dst ...any) error {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	return c.connection.AutoMigrate(dst...)
+}
+
+func (c *Client) Close() error {
+	return c.DB().Close()
 }

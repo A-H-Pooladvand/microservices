@@ -1,15 +1,15 @@
 package grpc
 
 import (
+	"context"
 	"fmt"
 	"google.golang.org/grpc"
 	"net"
 	"po/api/proto/ping/v1"
-	"po/internal/app"
 	"po/internal/handlers"
 )
 
-func Serve(ctx app.Context) error {
+func Serve(_ context.Context) error {
 	fmt.Println("gRPC server started on [::]:8500")
 
 	lis, err := net.Listen("tcp", ":8500")

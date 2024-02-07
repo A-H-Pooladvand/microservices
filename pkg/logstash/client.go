@@ -26,7 +26,7 @@ func NewSingleton() (*Client, error) {
 	c := &Client{}
 
 	once.Do(func() {
-		con, e := net.Dial("tcp", "127.0.0.1:5000")
+		con, e := net.Dial("tcp", "127.0.0.1:50000")
 
 		c.Conn = con
 		err = e

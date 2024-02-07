@@ -1,17 +1,18 @@
 package providers
 
 import (
-	"po/internal/app"
+	"context"
 )
 
 var providers = []Booter{
 	//Vault,
 	Postgres,
+	Migrations,
 }
 
-type Booter func(ctx app.Context) error
+type Booter func(ctx context.Context) error
 
-func Boot(ctx app.Context) error {
+func Boot(ctx context.Context) error {
 	for _, fn := range providers {
 		if err := fn(ctx); err != nil {
 			return err

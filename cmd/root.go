@@ -37,7 +37,7 @@ func Execute() {
 		zap.L().Panic("unable to load .env file", zap.Error(err))
 	}
 
-	ctx, cancel := app.WithCancel()
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	defer panicRecover(cancel)
@@ -59,7 +59,7 @@ func Execute() {
 	}
 }
 
-func serve(ctx app.Context) error {
+func serve(ctx context.Context) error {
 	g, _ := errgroup.WithContext(ctx)
 
 	g.Go(func() error {

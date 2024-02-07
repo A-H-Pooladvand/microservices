@@ -9,7 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"po/cfg"
-	"po/internal/app"
+	"po/internal/webserver/middlewares"
 	"po/routes"
 	"time"
 )
@@ -20,9 +20,10 @@ func New() *Webserver {
 	return &Webserver{}
 }
 
-func (a *Webserver) Serve(ctx app.Context) error {
+func (a *Webserver) Serve(ctx context.Context) error {
 	c := cfg.NewApp()
 	e := echo.New()
+	e.Use(middlewares.Context)
 	e.Use(apmechov4.Middleware())
 	e.HideBanner = true
 

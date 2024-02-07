@@ -1,17 +1,14 @@
 package app
 
-import "context"
+import (
+	"github.com/labstack/echo/v4"
+	"po/internal/response"
+)
 
 type Context struct {
-	context.Context
+	echo.Context
 }
 
-func WithCancel() (Context, context.CancelFunc) {
-	ctx, cancel := context.WithCancel(
-		context.Background(),
-	)
-
-	return Context{
-		Context: ctx,
-	}, cancel
+func (c *Context) R() *response.Response {
+	return response.New(c.Context)
 }

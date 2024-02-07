@@ -1,11 +1,12 @@
 package providers
 
 import (
+	"context"
 	"po/internal/app"
 	"po/internal/db"
 )
 
-func Postgres(ctx app.Context) error {
+func Postgres(_ context.Context) error {
 	client := db.New()
 
 	a := app.Get()
