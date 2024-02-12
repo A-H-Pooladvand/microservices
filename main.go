@@ -5,6 +5,10 @@ import (
 	"po/cmd"
 )
 
+// Todo:: Move apm integration to dedicated place
+// Todo:: Try to implement vault
+// Todo:: Add dockers such as vault and postgres and...
+// Todo::
 func main() {
 	_ = os.Setenv("ELASTIC_APM_SERVER_URL", "http://127.0.0.1:8200")
 	_ = os.Setenv("ELASTIC_APM_SERVICE_NAME", "app")
