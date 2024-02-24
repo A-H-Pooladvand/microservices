@@ -3,6 +3,7 @@ package logstash
 import (
 	"fmt"
 	"net"
+	"po/configs"
 	"sync"
 )
 
@@ -25,25 +26,19 @@ func NewSingleton() (*Client, error) {
 
 	c := &Client{}
 
+	config, err := configs.NewLogstash()
+
+	if err != nil {
+		return nil, err
+	}
+
 	once.Do(func() {
-		con, e := net.Dial("tcp", "127.0.0.1:50000")
+		con, e := net.Dial("tcp", config.Address)
 
 		c.Conn = con
 		err = e
 		client = c
 	})
 
-	if err != nil {
-		panic(err)
-	}
-
 	return client, err
-}
-
-func Get() *Client {
-	if client == nil {
-		_, _ = NewSingleton()
-	}
-
-	return client
 }

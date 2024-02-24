@@ -3,13 +3,13 @@ package webserver
 import (
 	"context"
 	"errors"
-	"fmt"
+	"github.com/fatih/color"
 	"github.com/labstack/echo/v4"
 	"go.elastic.co/apm/module/apmechov4/v2"
 	"net/http"
 	"os"
 	"os/signal"
-	"po/cfg"
+	"po/configs"
 	"po/internal/webserver/middlewares"
 	"po/routes"
 	"time"
@@ -22,7 +22,12 @@ func New() *Webserver {
 }
 
 func (a *Webserver) Serve(ctx context.Context) error {
-	c := cfg.NewApp()
+	c, err := configs.NewApp()
+
+	if err != nil {
+		return err
+	}
+
 	e := echo.New()
 	e.Use(middlewares.Context)
 	e.Use(apmechov4.Middleware())
@@ -31,7 +36,7 @@ func (a *Webserver) Serve(ctx context.Context) error {
 
 	routes.Register(e)
 
-	fmt.Printf("⇨ http server started on http://127.0.0.1:%v\n", c.Port)
+	color.Green("⇨ http server started on http://127.0.0.1:%v\n", c.Port)
 
 	if err := e.Start(":" + c.Port); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		e.Logger.Fatal("shutting down the server")

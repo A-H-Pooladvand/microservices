@@ -5,9 +5,9 @@ import (
 )
 
 var providers = []Booter{
-	//Vault,
+	Vault,
 	Postgres,
-	Migrations,
+	APM,
 }
 
 type Booter func(ctx context.Context) error

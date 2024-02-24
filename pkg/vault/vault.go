@@ -2,74 +2,70 @@ package vault
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	vault "github.com/hashicorp/vault/api"
-	"github.com/hashicorp/vault/api/auth/approle"
-	"log"
+	auth "github.com/hashicorp/vault/api/auth/approle"
 )
 
-type Vault struct {
-	Client *vault.Client
-	Config Config
+type Client struct {
+	config Config
+	conn   *vault.Client
 }
 
-func New(config Config) (*Vault, error) {
-	ctx, cancelContextFunc := context.WithCancel(context.Background())
-	defer cancelContextFunc()
+func New(config Config) (*Client, error) {
+	c := vault.DefaultConfig()
+	c.Address = config.Address
 
-	cfg := vault.DefaultConfig() // modify for more granular configuration
-	cfg.Address = config.Address
-
-	client, err := vault.NewClient(cfg)
+	vc, err := vault.NewClient(c)
 
 	if err != nil {
-		return nil, fmt.Errorf("unable to initialize vault Client: %w", err)
+		return nil, err
 	}
 
-	v := &Vault{
-		Client: client,
-		Config: config,
+	client := &Client{
+		config: config,
+		conn:   vc,
 	}
 
-	token, err := v.login(ctx)
+	client.login(context.Background())
 
-	fmt.Println("---------------")
-	fmt.Println(token.TokenID())
-
-	if err != nil {
-		return nil, fmt.Errorf("vault login error: %w", err)
-	}
-
-	log.Println("connecting to vault: success!")
-
-	return v, nil
+	return client, nil
 }
 
-func (v *Vault) login(ctx context.Context) (*vault.Secret, error) {
-	log.Printf("logging in to vault with approle auth; role id: %s", v.Config.ApproleRoleID)
-
-	approleSecretID := &approle.SecretID{
-		FromFile: v.Config.ApproleSecretIDFile,
+func (c *Client) login(ctx context.Context) (*vault.Secret, error) {
+	secretID := &auth.SecretID{
+		FromString: c.config.SecretID,
 	}
 
-	appRoleAuth, err := approle.NewAppRoleAuth(
-		v.Config.ApproleRoleID,
-		approleSecretID,
-		approle.WithWrappingToken(), // only required if the SecretID is response-wrapped
+	appRoleAuth, err := auth.NewAppRoleAuth(
+		c.config.RoleID,
+		secretID,
+		//auth.WithWrappingToken(),
 	)
+
 	if err != nil {
-		return nil, fmt.Errorf("unable to initialize approle authentication method: %w", err)
+		return nil, err
 	}
 
-	authInfo, err := v.Client.Auth().Login(ctx, appRoleAuth)
+	return c.conn.Auth().Login(ctx, appRoleAuth)
+}
+
+func (c *Client) Get(ctx context.Context, path string) (*vault.KVSecret, error) {
+	return c.conn.KVv2("secret").Get(ctx, path)
+}
+
+func (c *Client) Parse(ctx context.Context, path string, v any) error {
+	secret, err := c.Get(ctx, path)
+
 	if err != nil {
-		return nil, fmt.Errorf("unable to login using approle auth method: %w", err)
-	}
-	if authInfo == nil {
-		return nil, fmt.Errorf("no approle info was returned after login")
+		return err
 	}
 
-	log.Println("logging in to vault with approle auth: success!")
+	b, err := json.Marshal(secret.Data)
 
-	return authInfo, nil
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(b, v)
 }

@@ -2,52 +2,24 @@ package providers
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"log"
-	"po/pkg/vault"
+	"errors"
+	"po/internal/app"
+	"po/internal/vault"
 )
 
-func Vault(ctx context.Context) error {
-	config := vault.NewConfig(
-		"http://127.0.0.1:8200",
-		"demo-web-webserver",
-		"/tmp/secret",
-		"api-key",
-		"kv-v2",
-		"api-key-field",
-		"database/creds/dev-readonly",
-	)
+func Vault(_ context.Context) error {
+	if app.Production() {
+		config, err := vault.NewConfig()
 
-	v, err := vault.New(config)
+		if err != nil {
+			return err
+		}
 
-	//
-	log.Println("getting temporary database credentials from vault")
-
-	lease, err := v.Client.Logical().ReadWithContext(ctx, v.Config.DatabaseCredentialsPath)
-	if err != nil {
-		return fmt.Errorf("unable to read secret: %w", err)
+		if config.Empty() {
+			return errors.New(`Due to production constraints, environment variables are unavailable.
+Please specify the Config configuration.`)
+		}
 	}
 
-	b, err := json.Marshal(lease.Data)
-
-	if err != nil {
-		return fmt.Errorf("malformed credentials returned: %w", err)
-	}
-
-	var credentials DatabaseCredentials
-
-	if err := json.Unmarshal(b, &credentials); err != nil {
-		return fmt.Errorf("unable to unmarshal credentials: %w", err)
-	}
-
-	log.Println("getting temporary database credentials from vault: success!")
-
-	return err
-}
-
-// DatabaseCredentials is a set of dynamic credentials retrieved from Vault
-type DatabaseCredentials struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	return nil
 }

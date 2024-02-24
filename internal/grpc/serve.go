@@ -2,7 +2,7 @@ package grpc
 
 import (
 	"context"
-	"fmt"
+	"github.com/fatih/color"
 	"google.golang.org/grpc"
 	"net"
 	"po/api/proto/ping/v1"
@@ -10,7 +10,7 @@ import (
 )
 
 func Serve(_ context.Context) error {
-	fmt.Println("gRPC server started on [::]:8500")
+	color.Green("gRPC server started on [::]:8500")
 
 	lis, err := net.Listen("tcp", ":8500")
 

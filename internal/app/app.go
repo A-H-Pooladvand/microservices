@@ -1,8 +1,12 @@
 package app
 
 import (
+	"context"
+	"github.com/fatih/color"
+	"os"
 	"po/pkg/logstash"
 	"po/pkg/postgres"
+	"strings"
 	"sync"
 )
 
@@ -12,6 +16,7 @@ var (
 )
 
 type App struct {
+	Ctx      *context.Context
 	Logstash *logstash.Client
 	Postgres *postgres.Client
 }
@@ -19,6 +24,10 @@ type App struct {
 func (a *App) GracefulShutdown() {
 	a.Postgres.Shutdown()
 	a.Logstash.Shutdown()
+}
+
+func (a *App) Context() context.Context {
+	return *a.Ctx
 }
 
 func NewSingleton() *App {
@@ -31,4 +40,26 @@ func NewSingleton() *App {
 
 func Get() *App {
 	return NewSingleton()
+}
+
+func Production() bool {
+	env := strings.ToLower(os.Getenv("APP_ENV"))
+
+	return env == "prod" || env == "production"
+}
+
+func Local() bool {
+	return !Production()
+}
+
+func LocalMessage() {
+	if Production() {
+		return
+	}
+
+	warning := color.New(color.FgHiYellow).Add(color.Bold)
+	_, _ = warning.Println("----------------------------------------------------------------------------------------------------")
+	_, _ = warning.Println("| ⚠️ Warning: Application is running in LOCAL environment. ⚠️                                      |")
+	_, _ = warning.Println("| ⚠️ If this is unintended, please switch to the PRODUCTION environment for accurate results. ⚠️   |")
+	_, _ = warning.Println("----------------------------------------------------------------------------------------------------")
 }

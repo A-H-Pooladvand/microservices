@@ -2,20 +2,24 @@ package handlers
 
 import (
 	"github.com/labstack/echo/v4"
-	"go.elastic.co/apm/v2"
 	"po/internal/app"
+	"po/internal/vault"
 )
 
 func Home(c echo.Context) error {
 	ctx := c.(*app.Context)
 
-	tx := apm.DefaultTracer().StartTransaction("hello", "request")
-	defer tx.End()
+	client, err := vault.New()
 
-	tx.Context.SetCustom("key", "value")
+	if err != nil {
+		return ctx.R().BadRequest(err.Error())
+	}
 
-	span := tx.StartSpan("work", "custom", nil)
-	defer span.End()
+	secret, err := client.Get(c.Request().Context(), "database")
 
-	return ctx.R().Ok("Hello World")
+	if err != nil {
+		return ctx.R().BadRequest(err.Error())
+	}
+
+	return ctx.R().Ok(secret.Data)
 }

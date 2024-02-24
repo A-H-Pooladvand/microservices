@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"github.com/joho/godotenv"
 	golog "github.com/labstack/gommon/log"
 	"github.com/spf13/cobra"
@@ -15,31 +16,35 @@ import (
 )
 
 var cmd = &cobra.Command{
-	Use:   "webserver",
+	Use:   "app",
 	Short: "webserver",
 	Long:  `Initializing...`,
 }
 
 func Execute() {
+	// Load environment variables if APP_ENV set to local
+	if app.Local() {
+		if err := godotenv.Load(); err != nil {
+			zap.L().Panic("unable to load .env file", zap.Error(err))
+		}
+	}
+
 	// First it's mandatory to load our logger service
 	// before any other thing
 	log.Boot()
+
 	defer func(l *zap.Logger) {
 		if err := l.Sync(); err != nil {
 			golog.Error(err)
 		}
 	}(zap.L())
 
-	// Todo:: Load generic environments from docker
-	// Todo:: Load secrets from Vault service
-	// Load .env file
-	if err := godotenv.Load(); err != nil {
-		zap.L().Panic("unable to load .env file", zap.Error(err))
-	}
+	a := app.NewSingleton()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	a.Ctx = &ctx
 	defer panicRecover(cancel)
 
 	// Boot third party services
@@ -47,12 +52,9 @@ func Execute() {
 		zap.L().Panic("unable to boot service", zap.Error(err))
 	}
 
-	// Serve necessary protocols such as gRPC, HTTP etc...
-	cmd.Run = func(cmd *cobra.Command, args []string) {
-		if err := serve(ctx); err != nil {
-			zap.L().Panic("err to serve necessary protocols such as gRPC, HTTP etc", zap.Error(err))
-		}
-	}
+	cmd.AddCommand(serveCmd)
+	cmd.AddCommand(migrateCmd)
+	cmd.AddCommand(seedCmd)
 
 	if err := cmd.Execute(); err != nil {
 		zap.L().Panic("err", zap.Error(err))
@@ -76,7 +78,7 @@ func serve(ctx context.Context) error {
 func panicRecover(cancel context.CancelFunc) {
 	if r := recover(); r != nil {
 		cancel()
-		zap.L().Error("panic recovery", zap.Any("panic message", r))
+		zap.L().Error("panic recovery", zap.Any("panic message", fmt.Sprintf("%v", r)))
 		_ = zap.L().Sync()
 		app.Get().GracefulShutdown()
 	}

@@ -1,31 +1,19 @@
 package vault
 
 type Config struct {
-	Address                 string
-	ApproleRoleID           string
-	ApproleSecretIDFile     string
-	ApiKeyPath              string
-	ApiKeyMountPath         string
-	ApiKeyField             string
-	DatabaseCredentialsPath string
+	Address  string
+	RoleID   string
+	SecretID string
 }
 
 func NewConfig(
 	address string,
-	approleRoleID string,
-	approleSecretIDFile string,
-	apiKeyPath string,
-	apiKeyMountPath string,
-	apiKeyField string,
-	databaseCredentialsPath string,
+	roleID string,
+	secretID string,
 ) Config {
 	return Config{
-		Address:                 address,
-		ApproleRoleID:           approleRoleID,
-		ApproleSecretIDFile:     approleSecretIDFile,
-		ApiKeyPath:              apiKeyPath,
-		ApiKeyMountPath:         apiKeyMountPath,
-		ApiKeyField:             apiKeyField,
-		DatabaseCredentialsPath: databaseCredentialsPath,
+		Address:  address,
+		RoleID:   roleID,
+		SecretID: secretID,
 	}
 }
