@@ -24,9 +24,9 @@ To use Playground, follow these steps:
 2. **Configuration**: Configure Playground according to your requirements, including database settings, logging configurations, tracer settings, etc. Make sure to set up Vault for managing secrets.
 
 3. **Commands**:
-    - `serve`: Execute `playground serve` to start the microservice.
-    - `migrate`: Run `playground migrate` to perform database migrations.
-    - `seed`: Use `playground seed` to seed initial data into the database.
+    - `serve`: Execute `app serve` to start the microservice.
+    - `migrate`: Run `app migrate` to perform database migrations.
+    - `seed`: Use `app seed` to seed initial data into the database.
 
 4. **Development**: Start developing your microservices using Playground. Leverage its integrated tools and components to enhance productivity and efficiency.
 
