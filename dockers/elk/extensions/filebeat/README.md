@@ -19,7 +19,7 @@ $ docker-compose -f docker-compose.yml -f extensions/filebeat/filebeat-compose.y
 
 ## Configuring Filebeat
 
-The Filebeat configuration is stored in [`config/filebeat.yml`](./config/filebeat.yml). You can modify this file with
+The Filebeat configuration is stored in [`config/filebeat.yml`](config/filebeat.yml). You can modify this file with
 the help of the [Configuration reference][filebeat-config].
 
 Any change to the Filebeat configuration requires a restart of the Filebeat container:
