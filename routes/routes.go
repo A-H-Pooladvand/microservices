@@ -2,9 +2,9 @@ package routes
 
 import (
 	"github.com/labstack/echo/v4"
-	"po/internal/handlers"
+	"po/internal/handlers/home"
 )
 
 func Register(e *echo.Echo) {
-	e.GET("/", handlers.Home)
+	e.GET("/", home.New().Home)
 }

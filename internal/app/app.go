@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"github.com/fatih/color"
+	"github.com/labstack/echo/v4"
 	"os"
 	"po/pkg/logstash"
 	"po/pkg/postgres"
@@ -62,4 +63,10 @@ func LocalMessage() {
 	_, _ = warning.Println("| ⚠️ Warning: Application is running in LOCAL environment. ⚠️                                      |")
 	_, _ = warning.Println("| ⚠️ If this is unintended, please switch to the PRODUCTION environment for accurate results. ⚠️   |")
 	_, _ = warning.Println("----------------------------------------------------------------------------------------------------")
+}
+
+func GetContext(c echo.Context) (*Context, bool) {
+	ctx, ok := c.(*Context)
+
+	return ctx, ok
 }

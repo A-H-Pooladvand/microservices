@@ -16,7 +16,7 @@ type Redis struct {
 	client *redis.Client
 }
 
-func NewRedis(c Config) *Redis {
+func New(c Config) *Redis {
 	client := redis.NewClient(&redis.Options{
 		//ClientName:            "",
 		//OnConnect:             nil,

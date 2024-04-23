@@ -15,6 +15,26 @@ import (
 	"po/pkg/log"
 )
 
+type Message string
+
+func NewMessage() Message {
+	return "Hello World"
+}
+
+type Greeter struct {
+	Message Message
+}
+
+func NewGreeter(message Message) Greeter {
+	return Greeter{
+		Message: message,
+	}
+}
+
+func (g Greeter) Hi() {
+	fmt.Println(g.Message)
+}
+
 var cmd = &cobra.Command{
 	Use:   "app",
 	Short: "webserver",
