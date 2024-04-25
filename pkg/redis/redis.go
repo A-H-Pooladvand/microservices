@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/fx"
 	"go.uber.org/zap"
+	"po/configs"
 	"po/pkg/cache"
 	"time"
 )
@@ -29,6 +31,16 @@ func New(c Config) *Redis {
 	return &Redis{
 		client: client,
 	}
+}
+
+func Provide(lc fx.Lifecycle, c *configs.Redis) *Redis {
+	client := New(Config{
+		Address:  c.Addr,
+		User:     c.User,
+		Password: c.Pass,
+	})
+
+	return client
 }
 
 func (r *Redis) Set(ctx context.Context, key string, value any, ttl time.Duration) error {

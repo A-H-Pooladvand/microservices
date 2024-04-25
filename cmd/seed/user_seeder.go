@@ -1,15 +1,15 @@
 package seed
 
 import (
-	"po/internal/db"
 	"po/internal/models"
+	"po/pkg/postgres"
 )
 
 type UserSeeder struct {
 	model models.User
 }
 
-func (u UserSeeder) Run() {
+func (u UserSeeder) Run(db *postgres.Client) {
 	var users []*models.User
 	for i := 0; i < 10; i++ {
 		user := models.NewUser()
@@ -17,5 +17,5 @@ func (u UserSeeder) Run() {
 		users = append(users, user)
 	}
 
-	db.New().Create(users)
+	db.Create(users)
 }

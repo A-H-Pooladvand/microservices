@@ -1,46 +1,20 @@
 package app
 
 import (
-	"context"
 	"github.com/fatih/color"
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 	"os"
-	"po/pkg/logstash"
-	"po/pkg/postgres"
 	"strings"
-	"sync"
 )
 
-var (
-	app  *App
-	once sync.Once
-)
-
-type App struct {
-	Ctx      *context.Context
-	Logstash *logstash.Client
-	Postgres *postgres.Client
+func GetEnv(key string) string {
+	return os.Getenv(key)
 }
 
-func (a *App) GracefulShutdown() {
-	a.Postgres.Shutdown()
-	a.Logstash.Shutdown()
-}
-
-func (a *App) Context() context.Context {
-	return *a.Ctx
-}
-
-func NewSingleton() *App {
-	once.Do(func() {
-		app = &App{}
-	})
-
-	return app
-}
-
-func Get() *App {
-	return NewSingleton()
+func SetEnv(key, value string) error {
+	return os.Setenv(key, value)
 }
 
 func Production() bool {
@@ -69,4 +43,12 @@ func GetContext(c echo.Context) (*Context, bool) {
 	ctx, ok := c.(*Context)
 
 	return ctx, ok
+}
+
+func LoadEnvironmentVariablesInLocalEnv() {
+	if Local() {
+		if err := godotenv.Load(); err != nil {
+			zap.L().Panic("unable to load .env file", zap.Error(err))
+		}
+	}
 }

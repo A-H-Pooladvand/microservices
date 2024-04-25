@@ -1,18 +1,13 @@
 package db
 
 import (
-	"go.uber.org/zap"
+	"context"
+	"go.uber.org/fx"
 	"po/configs"
 	"po/pkg/postgres"
 )
 
-func New() *postgres.Client {
-	config, err := configs.NewPostgres()
-
-	if err != nil {
-		zap.L().Panic("err", zap.Error(err))
-	}
-
+func New(lc fx.Lifecycle, config *configs.Postgres) *postgres.Client {
 	c, err := postgres.New(
 		postgres.NewConfig(
 			config.Host,
@@ -24,9 +19,14 @@ func New() *postgres.Client {
 		),
 	)
 
-	if err != nil {
-		zap.L().Panic("err", zap.Error(err))
-	}
+	lc.Append(fx.Hook{
+		OnStart: func(ctx context.Context) error {
+			return err
+		},
+		OnStop: func(ctx context.Context) error {
+			return c.Close()
+		},
+	})
 
 	return c
 }

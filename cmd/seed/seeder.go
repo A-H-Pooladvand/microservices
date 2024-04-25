@@ -1,5 +1,7 @@
 package seed
 
+import "po/pkg/postgres"
+
 type Seeder interface {
-	Run()
+	Run(db *postgres.Client)
 }

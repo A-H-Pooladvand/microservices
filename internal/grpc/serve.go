@@ -3,25 +3,43 @@ package grpc
 import (
 	"context"
 	"github.com/fatih/color"
+	"go.uber.org/fx"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"net"
-	"po/api/proto/ping/v1"
-	"po/internal/handlers"
+	"po/configs"
+	"po/routes"
 )
 
-func Serve(_ context.Context) error {
-	color.Green("gRPC server started on [::]:8500")
+func Invoke(lc fx.Lifecycle, config *configs.App) *grpc.Server {
+	server := grpc.NewServer()
 
-	lis, err := net.Listen("tcp", ":8500")
+	lc.Append(fx.Hook{
+		OnStart: func(ctx context.Context) error {
+			lis, err := net.Listen("tcp", ":"+config.GrpcPort)
 
-	if err != nil {
-		return err
-	}
+			if err != nil {
+				return err
+			}
 
-	s := grpc.NewServer()
-	ping.RegisterPingServiceServer(s, &handlers.Ping{})
+			routes.RegisterGrpcRoutes(server)
 
-	err = s.Serve(lis)
+			go func() {
+				color.Green("gRPC server started on [::]:" + config.GrpcPort)
 
-	return err
+				if err = server.Serve(lis); err != nil {
+					zap.L().Error("GRPC serve error", zap.Error(err))
+				}
+			}()
+
+			return nil
+		},
+		OnStop: func(ctx context.Context) error {
+			server.Stop()
+
+			return nil
+		},
+	})
+
+	return server
 }

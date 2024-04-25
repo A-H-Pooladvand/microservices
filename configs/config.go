@@ -3,25 +3,18 @@ package configs
 import (
 	"context"
 	"github.com/caarlos0/env/v10"
-	"os"
-	"po/internal/vault"
-	"strings"
+	"po/internal/app"
+	"po/pkg/vault"
+	"time"
 )
 
-func parse(path string, v any) error {
-	environment := strings.ToLower(os.Getenv("APP_ENV"))
-
-	prod := environment == "prod" || environment == "production"
-
-	if !prod {
+func Parse(path string, v any, client *vault.Client) error {
+	if app.Local() {
 		return env.Parse(v)
 	}
 
-	client, err := vault.New()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
 
-	if err != nil {
-		return err
-	}
-
-	return client.Parse(context.Background(), path, v)
+	return client.Parse(ctx, path, v)
 }

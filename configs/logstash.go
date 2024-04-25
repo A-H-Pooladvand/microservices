@@ -1,13 +1,13 @@
 package configs
 
+import "po/pkg/vault"
+
 type Logstash struct {
 	Address string `env:"LOGSTASH_ADDRESS" json:"address"`
 }
 
-func NewLogstash() (Logstash, error) {
-	c := Logstash{}
+func NewLogstash(client *vault.Client) (*Logstash, error) {
+	c := &Logstash{}
 
-	err := parse("logstash", &c)
-
-	return c, err
+	return c, Parse("logstash", c, client)
 }

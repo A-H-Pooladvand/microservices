@@ -2,9 +2,12 @@ package routes
 
 import (
 	"github.com/labstack/echo/v4"
-	"po/internal/handlers/home"
+	"po/internal/handlers"
 )
 
-func Register(e *echo.Echo) {
-	e.GET("/", home.New().Home)
+func RegisterWebRoutes(e *echo.Echo, w *handlers.WebHandlers) {
+	usersGroup := e.Group("users")
+	{
+		usersGroup.GET("", w.User.Index)
+	}
 }

@@ -1,44 +1,53 @@
 package logstash
 
 import (
-	"fmt"
+	"context"
+	"github.com/fatih/color"
+	"go.uber.org/fx"
 	"net"
 	"po/configs"
-	"sync"
-)
-
-var (
-	client *Client
-	once   sync.Once
 )
 
 type Client struct {
-	Conn net.Conn
+	conn   net.Conn
+	Config *configs.Logstash
 }
 
-func (c *Client) Shutdown() error {
-	fmt.Println("Shutting down logstash client")
-	return c.Conn.Close()
-}
-
-func NewSingleton() (*Client, error) {
-	var err error
-
-	c := &Client{}
-
-	config, err := configs.NewLogstash()
-
-	if err != nil {
-		return nil, err
+func New(lc fx.Lifecycle, config *configs.Logstash) *Client {
+	c := &Client{
+		Config: config,
 	}
 
-	once.Do(func() {
-		con, e := net.Dial("tcp", config.Address)
-
-		c.Conn = con
-		err = e
-		client = c
+	lc.Append(fx.Hook{
+		OnStart: c.OnStart,
+		OnStop:  c.Shutdown,
 	})
 
-	return client, err
+	return c
+}
+
+func (c *Client) OnStart(_ context.Context) error {
+	conn, err := net.Dial("tcp", c.Config.Address)
+
+	// Todo:: Handle production state, make a mechanism to dynamically turn on/off services
+	// Since the application should not go down due to log failure, we won't panic
+	if err != nil {
+		conn1, conn2 := net.Pipe()
+		conn2.Close()
+
+		c.conn = conn1
+		color.Red("unable to connect to logstash: %v", err.Error())
+	} else {
+		c.conn = conn
+	}
+
+	return nil
+}
+
+func (c *Client) Shutdown(_ context.Context) error {
+	return c.conn.Close()
+}
+
+func (c *Client) Connection() net.Conn {
+	return c.conn
 }

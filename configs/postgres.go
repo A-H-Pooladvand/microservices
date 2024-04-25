@@ -1,5 +1,7 @@
 package configs
 
+import "po/pkg/vault"
+
 type Postgres struct {
 	Host     string `env:"POSTGRES_HOST" envDefault:"127.0.0.1" json:"host"`
 	Port     string `env:"POSTGRES_PORT" envDefault:"5432" json:"port"`
@@ -9,10 +11,10 @@ type Postgres struct {
 	Timeout  int    `env:"POSTGRES_TIMEOUT" json:"timeout"`
 }
 
-func NewPostgres() (Postgres, error) {
-	c := Postgres{}
+func NewPostgres(client *vault.Client) (*Postgres, error) {
+	c := &Postgres{}
 
-	err := parse("database", &c)
+	err := Parse("database", c, client)
 
 	return c, err
 }

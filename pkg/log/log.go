@@ -1,35 +1,21 @@
 package log
 
 import (
-	"github.com/fatih/color"
+	"context"
+	"errors"
 	"go.elastic.co/apm/module/apmzap/v2"
 	"go.elastic.co/ecszap"
+	"go.uber.org/fx"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"net"
 	"os"
 	"po/pkg/logstash"
+	"syscall"
 )
 
-func Boot() {
-	client, err := logstash.NewSingleton()
-
-	var conn net.Conn
-
-	// Since application should not go down for a log failure we won't panic
-	if err != nil {
-		conn1, conn2 := net.Pipe()
-		defer conn1.Close()
-		defer conn2.Close()
-
-		conn = conn1
-		color.Red("unable to connect to logstash: %v", err.Error())
-	} else {
-		conn = client.Conn
-	}
-
+func Invoke(lc fx.Lifecycle, l *logstash.Client) {
 	ls := zapcore.AddSync(
-		conn,
+		l.Connection(),
 	)
 
 	core := zapcore.NewTee(
@@ -49,4 +35,16 @@ func Boot() {
 	)
 
 	zap.ReplaceGlobals(logger)
+
+	lc.Append(fx.Hook{
+		OnStop: func(ctx context.Context) error {
+			err := zap.L().Sync()
+
+			if !errors.Is(err, syscall.EINVAL) {
+				return err
+			}
+
+			return nil
+		},
+	})
 }
