@@ -8,7 +8,6 @@ import (
 	"go.uber.org/zap"
 	"po/cmd/seed"
 	"po/configs"
-	"po/internal/apm"
 	"po/internal/app"
 	"po/internal/db"
 	"po/internal/vault"
@@ -45,7 +44,7 @@ func runSeeders(cmd *cobra.Command, args []string) {
 
 		fx.Invoke(
 			log.Invoke,
-			apm.Invoke,
+			//apm.Invoke,
 			func(db *postgres.Client) {
 				for _, seeder := range seeders {
 					seeder.Run(db)

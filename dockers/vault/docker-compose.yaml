@@ -1,12 +1,5 @@
-# Copyright (c) HashiCorp, Inc.
-# SPDX-License-Identifier: MPL-2.0
-
-version: "3.9"
 services:
-
   vault-server:
-    networks:
-      - elk
     build: ./
     cap_add:
       - IPC_LOCK
@@ -16,8 +9,3 @@ services:
       APPROLE_ROLE_NAME: app
     ports:
       - "8202:8200"
-
-networks:
-  elk:
-    driver: bridge
-    name: elk

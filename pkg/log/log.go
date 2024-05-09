@@ -31,6 +31,7 @@ func Invoke(lc fx.Lifecycle, l *logstash.Client) {
 		core,
 		zap.AddStacktrace(zapcore.ErrorLevel),
 		zap.AddCaller(),
+		zap.AddCallerSkip(1),
 		zap.WrapCore((&apmzap.Core{}).WrapCore),
 	)
 
@@ -47,4 +48,28 @@ func Invoke(lc fx.Lifecycle, l *logstash.Client) {
 			return nil
 		},
 	})
+}
+
+func Error(msg string, fields ...zap.Field) {
+	zap.L().Error(msg, fields...)
+}
+
+func Info(msg string, fields ...zap.Field) {
+	zap.L().Info(msg, fields...)
+}
+
+func Panic(msg string, fields ...zap.Field) {
+	zap.L().Panic(msg, fields...)
+}
+
+func Warn(msg string, fields ...zap.Field) {
+	zap.L().Warn(msg, fields...)
+}
+
+func Fatal(msg string, fields ...zap.Field) {
+	zap.L().Fatal(msg, fields...)
+}
+
+func Debug(msg string, fields ...zap.Field) {
+	zap.L().Debug(msg, fields...)
 }

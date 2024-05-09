@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/fx"
 	"po/configs"
-	"po/internal/apm"
 	"po/internal/app"
 	"po/internal/db"
 	"po/internal/grpc"
@@ -17,28 +16,20 @@ import (
 	"po/pkg/logstash"
 	"po/pkg/rabbitmq"
 	"po/pkg/redis"
+	"po/pkg/tracer"
 )
 
 var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "serves the application",
-	// Invoke the necessary protocols such as gRPC, HTTP, etc...
+	// Provide the necessary protocols such as gRPC, HTTP, etc...
 	Run: runApplication,
 }
-
-var DBModule = fx.Module(
-	"db",
-	fx.Provide(
-		configs.NewPostgres,
-		db.New,
-	),
-)
 
 func runApplication(cmd *cobra.Command, args []string) {
 	app.LoadEnvironmentVariablesInLocalEnv()
 
 	application := fx.New(
-		DBModule,
 		user.Module,
 		fx.Provide(
 			// Loading configs
@@ -46,12 +37,16 @@ func runApplication(cmd *cobra.Command, args []string) {
 			configs.NewLogstash,
 			configs.NewRabbitMQ,
 			configs.NewRedis,
+			configs.NewJaeger,
 			vault.NewConfig,
+			configs.NewPostgres,
+			db.New,
 			// Loading services
 			logstash.New,
 			vault.Provide,
 			rabbitmq.Provide,
 			handlers.NewWebHandlers,
+			tracer.Provide,
 			fx.Annotate(
 				redis.Provide,
 				fx.As(new(cache.Cache)),
@@ -60,7 +55,7 @@ func runApplication(cmd *cobra.Command, args []string) {
 
 		fx.Invoke(
 			log.Invoke,
-			apm.Invoke,
+			//apm.Provide,
 			grpc.Invoke,
 			webserver.Invoke,
 		),

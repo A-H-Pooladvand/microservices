@@ -7,7 +7,6 @@ import (
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 	"po/configs"
-	"po/internal/apm"
 	"po/internal/app"
 	"po/internal/db"
 	"po/internal/models"
@@ -41,7 +40,7 @@ func runMigrations(cmd *cobra.Command, args []string) {
 
 		fx.Invoke(
 			log.Invoke,
-			apm.Invoke,
+			//apm.Invoke,
 			func(db *postgres.Client) {
 				err := db.AutoMigrate(
 					migrations()...,
