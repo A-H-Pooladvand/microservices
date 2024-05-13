@@ -14,7 +14,7 @@ import (
 	"po/routes"
 )
 
-func Invoke(lc fx.Lifecycle, c *configs.App, w *handlers.WebHandlers) *echo.Echo {
+func Invoke(lc fx.Lifecycle, c *configs.App, w *handlers.RestHandlers) *echo.Echo {
 	e := echo.New()
 
 	RegisterMiddlewares(e)

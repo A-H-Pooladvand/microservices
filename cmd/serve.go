@@ -16,7 +16,7 @@ import (
 	"po/pkg/logstash"
 	"po/pkg/rabbitmq"
 	"po/pkg/redis"
-	"po/pkg/tracer"
+	"po/pkg/trace"
 )
 
 var serveCmd = &cobra.Command{
@@ -45,8 +45,10 @@ func runApplication(cmd *cobra.Command, args []string) {
 			logstash.New,
 			vault.Provide,
 			rabbitmq.Provide,
-			handlers.NewWebHandlers,
-			tracer.Provide,
+			trace.Provide,
+
+			handlers.NewRestHandlers,
+			handlers.NewGrpcHandlers,
 			fx.Annotate(
 				redis.Provide,
 				fx.As(new(cache.Cache)),

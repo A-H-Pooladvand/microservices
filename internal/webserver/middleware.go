@@ -9,6 +9,6 @@ import (
 
 func RegisterMiddlewares(e *echo.Echo) {
 	e.Use(middlewares.Context)
-	e.Use(otelecho.Middleware("my-server"))
+	e.Use(otelecho.Middleware("app"))
 	e.Use(apmechov4.Middleware())
 }

@@ -1,4 +1,4 @@
-package tracer
+package trace
 
 import (
 	"context"
@@ -8,14 +8,13 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.20.0"
-	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/fx"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"po/configs"
 )
 
-func Provide(lc fx.Lifecycle, config *configs.Jaeger, app *configs.App) (tracer trace.Tracer) {
+func Provide(lc fx.Lifecycle, config *configs.Jaeger, app *configs.App) (tracer Tracer) {
 	var tracerProvider *sdktrace.TracerProvider
 
 	lc.Append(fx.Hook{
@@ -59,9 +58,12 @@ func Provide(lc fx.Lifecycle, config *configs.Jaeger, app *configs.App) (tracer 
 
 			otel.SetTracerProvider(tracerProvider)
 
-			otel.SetTextMapPropagator(propagation.TraceContext{})
+			//otel.SetTextMapPropagator(propagation.TraceContext{})
+			// Setup Propagators only
+			otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 
-			tracer = otel.Tracer(app.Name)
+			//logger := stdr.New(log.New(os.Stdout, "", log.LstdFlags|log.Lshortfile))
+			//otel.SetLogger(logger)
 
 			return nil
 		},
@@ -70,5 +72,5 @@ func Provide(lc fx.Lifecycle, config *configs.Jaeger, app *configs.App) (tracer 
 		},
 	})
 
-	return tracer
+	return newTracer()
 }
