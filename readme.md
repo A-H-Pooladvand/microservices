@@ -4,17 +4,18 @@ Playground is a project designed to provide the minimum requirements for working
 
 ## Features
 
-- **Database**: Utilizes PostgreSQL with GORM as the ORM for database operations.
-- **Logging**: Offers logging capabilities to Logstash, file, and standard output (stdout) using Zap.
-- **Tracing**: Incorporates APM (Application Performance Monitoring) as a tracer for performance monitoring.
-- **Framework**: Built on top of Echo, a high-performance Go web framework.
-- **Secret Management**: Integrates Vault as a secret manager for secure handling of sensitive information.
-- **Command Line Interface**: Employs Cobra for building command-line interfaces.
-- **Commands**:
-    - `serve`: Command to serve the microservice.
-    - `migrate`: Command to perform database migrations.
-    - `seed`: Command to seed initial data into the database.
-
+- [x] Echo
+- [x] Faker
+- [x] Vault
+- [x] RabbitMQ
+- [x] Redis
+- [x] Cobra
+- [x] Swagger
+- [x] Jaeger
+- [x] Uber Fx
+- [x] Zap
+- [x] gRPC
+- [x] Postgres
 ## Usage
 
 To use Playground, follow these steps:
