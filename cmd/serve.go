@@ -8,15 +8,17 @@ import (
 	"po/internal/db"
 	"po/internal/grpc"
 	"po/internal/handlers"
+	"po/internal/handlers/metric"
 	"po/internal/handlers/user"
 	"po/internal/vault"
 	"po/internal/webserver"
 	"po/pkg/cache"
 	"po/pkg/log"
 	"po/pkg/logstash"
+	"po/pkg/prometheus"
 	"po/pkg/rabbitmq"
 	"po/pkg/redis"
-	"po/pkg/tracer"
+	"po/pkg/trace"
 )
 
 var serveCmd = &cobra.Command{
@@ -31,6 +33,7 @@ func runApplication(cmd *cobra.Command, args []string) {
 
 	application := fx.New(
 		user.Module,
+		metric.Module,
 		fx.Provide(
 			// Loading configs
 			configs.NewApp,
@@ -45,8 +48,11 @@ func runApplication(cmd *cobra.Command, args []string) {
 			logstash.New,
 			vault.Provide,
 			rabbitmq.Provide,
-			handlers.NewWebHandlers,
-			tracer.Provide,
+			trace.Provide,
+			prometheus.Provide,
+
+			handlers.NewRestHandlers,
+			handlers.NewGrpcHandlers,
 			fx.Annotate(
 				redis.Provide,
 				fx.As(new(cache.Cache)),

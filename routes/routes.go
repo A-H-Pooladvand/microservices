@@ -6,11 +6,16 @@ import (
 	"po/internal/handlers"
 )
 
-func RegisterWebRoutes(e *echo.Echo, w *handlers.WebHandlers) {
+func RegisterWebRoutes(e *echo.Echo, w *handlers.RestHandlers) {
+	e.GET("/metrics", w.Metric.Handle)
+
 	e.GET("/swagger/*", echoSwagger.WrapHandler)
 
-	usersGroup := e.Group("users")
+	v1 := e.Group("api/v1/")
+
+	usersGroup := v1.Group("users")
 	{
 		usersGroup.GET("", w.User.Index)
+		usersGroup.GET(":id", w.User.Show)
 	}
 }

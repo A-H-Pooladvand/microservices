@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/fatih/color"
 	"github.com/labstack/echo/v4"
+	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/fx"
 	"net/http"
 	"os"
@@ -14,10 +15,15 @@ import (
 	"po/routes"
 )
 
-func Invoke(lc fx.Lifecycle, c *configs.App, w *handlers.WebHandlers) *echo.Echo {
+func Invoke(
+	lc fx.Lifecycle,
+	c *configs.App,
+	w *handlers.RestHandlers,
+	r *prometheus.Registry,
+) *echo.Echo {
 	e := echo.New()
 
-	RegisterMiddlewares(e)
+	RegisterMiddlewares(e, r)
 	e.HideBanner = true
 	e.HidePort = true
 	routes.RegisterWebRoutes(e, w)
