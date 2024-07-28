@@ -13,5 +13,6 @@ func RegisterMiddlewares(e *echo.Echo, r *prometheus.Registry) {
 	e.Use(middlewares.Context)
 	e.Use(echoprometheus.NewMiddlewareWithConfig(echoprometheus.MiddlewareConfig{Registerer: r}))
 	e.Use(otelecho.Middleware("app"))
+	e.Use(otelecho.Middleware("app"))
 	e.Use(apmechov4.Middleware())
 }
