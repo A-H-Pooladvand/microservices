@@ -9,14 +9,14 @@ import (
 )
 
 type GrpcHandler struct {
-	service *Service
+	service Service
 	tracer  trace.Tracer
 	grpc.UnimplementedUserServiceServer
 }
 
 type GrpcHandlerParams struct {
 	fx.In
-	Service *Service
+	Service Service
 	Tracer  trace.Tracer
 }
 

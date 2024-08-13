@@ -9,18 +9,18 @@ import (
 	"log"
 	"po/api/proto/ping/v1"
 	"po/internal/app"
-	_ "po/internal/entities"
+	_ "po/internal/entity"
 	"po/pkg/trace"
 )
 
 type RestHandler struct {
-	service *Service
+	service Service
 	tracer  trace.Tracer
 }
 
 type RestHandlerParams struct {
 	fx.In
-	Service *Service
+	Service Service
 	Tracer  trace.Tracer
 }
 
@@ -33,7 +33,7 @@ func NewRestHandler(params RestHandlerParams) RestHandler {
 
 // Index godoc
 //
-//	@Summary		Lists all users.
+//	@Summary		List all users
 //	@Description	Retrieves a list of all users in the system.
 //	@tags			Users
 //	@Accept			json

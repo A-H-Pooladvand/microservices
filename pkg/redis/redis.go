@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/fx"
-	"go.uber.org/zap"
 	"po/configs"
 	"po/pkg/cache"
 	"time"
@@ -84,12 +83,7 @@ func (r *Redis) normalize(value any) []byte {
 	case []byte:
 		return v
 	default:
-		b, err := json.Marshal(v)
-
-		if err != nil {
-			zap.L().Sugar().Error(err)
-		}
-
+		b, _ := json.Marshal(v)
 		return b
 	}
 }

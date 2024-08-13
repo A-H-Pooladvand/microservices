@@ -1,7 +1,9 @@
 package seed
 
-import "po/pkg/postgres"
+import (
+	"gorm.io/gorm"
+)
 
 type Seeder interface {
-	Run(db *postgres.Client)
+	Run(db *gorm.DB)
 }

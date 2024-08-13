@@ -1,6 +1,9 @@
 package postgres
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type Config struct {
 	Host     string
@@ -11,6 +14,7 @@ type Config struct {
 	Timeout  time.Duration
 }
 
+// NewConfig creates a new Config instance.
 func NewConfig(
 	host string,
 	port string,
@@ -27,4 +31,15 @@ func NewConfig(
 		DB:       db,
 		Timeout:  time.Second * time.Duration(timeout),
 	}
+}
+
+func (c *Config) DSN() string {
+	return fmt.Sprintf(
+		"host=%s port=%s user=%s password=%s dbname=%s  sslmode=disable TimeZone=Asia/Tehran",
+		c.Host,
+		c.Port,
+		c.Username,
+		c.Password,
+		c.DB,
+	)
 }

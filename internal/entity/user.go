@@ -1,4 +1,4 @@
-package entities
+package entity
 
 type UserResponse struct {
 	FirstName string `json:"first_name"`

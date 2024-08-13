@@ -6,14 +6,14 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 	"po/configs"
 	"po/internal/app"
 	"po/internal/db"
-	"po/internal/models"
+	"po/internal/handlers/user"
 	"po/internal/vault"
 	"po/pkg/log"
 	"po/pkg/logstash"
-	"po/pkg/postgres"
 )
 
 var migrateCmd = &cobra.Command{
@@ -41,7 +41,7 @@ func runMigrations(cmd *cobra.Command, args []string) {
 		fx.Invoke(
 			log.Invoke,
 			//apm.Invoke,
-			func(db *postgres.Client) {
+			func(db *gorm.DB) {
 				err := db.AutoMigrate(
 					migrations()...,
 				)
@@ -64,6 +64,6 @@ func runMigrations(cmd *cobra.Command, args []string) {
 
 func migrations() []any {
 	return []any{
-		models.User{},
+		user.User{},
 	}
 }

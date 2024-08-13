@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 	"po/cmd/seed"
 	"po/configs"
 	"po/internal/app"
@@ -13,7 +14,6 @@ import (
 	"po/internal/vault"
 	"po/pkg/log"
 	"po/pkg/logstash"
-	"po/pkg/postgres"
 )
 
 var seeders = []seed.Seeder{
@@ -45,7 +45,7 @@ func runSeeders(cmd *cobra.Command, args []string) {
 		fx.Invoke(
 			log.Invoke,
 			//apm.Invoke,
-			func(db *postgres.Client) {
+			func(db *gorm.DB) {
 				for _, seeder := range seeders {
 					seeder.Run(db)
 				}

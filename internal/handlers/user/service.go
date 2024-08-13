@@ -7,17 +7,17 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-type Service struct {
-	repository *Repository
+type service struct {
+	repository Repository
 }
 
-func NewService(repository *Repository) *Service {
-	return &Service{
+func NewService(repository Repository) Service {
+	return &service{
 		repository: repository,
 	}
 }
 
-func (s Service) GetAllUsers(ctx context.Context) {
+func (s service) GetAllUsers(ctx context.Context) {
 	tracer := otel.Tracer("app")
 	c, span := tracer.Start(
 		ctx,

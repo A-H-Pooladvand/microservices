@@ -26,6 +26,7 @@ func New(lc fx.Lifecycle, config *configs.Logstash) *Client {
 	return c
 }
 
+// OnStart creates a new connection to logstash
 func (c *Client) OnStart(_ context.Context) error {
 	conn, err := net.Dial("tcp", c.Config.Address)
 
@@ -44,10 +45,12 @@ func (c *Client) OnStart(_ context.Context) error {
 	return nil
 }
 
+// Shutdown closes the connection to logstash
 func (c *Client) Shutdown(_ context.Context) error {
 	return c.conn.Close()
 }
 
+// Connection returns the connection to logstash
 func (c *Client) Connection() net.Conn {
 	return c.conn
 }

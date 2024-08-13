@@ -5,12 +5,9 @@ import (
 	"po/internal/app"
 )
 
+// Context wraps the echo.Context to the app.Context
 func Context(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
-		cc := &app.Context{
-			Context: ctx,
-		}
-
-		return next(cc)
+		return next(app.NewContext(ctx))
 	}
 }

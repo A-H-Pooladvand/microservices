@@ -75,6 +75,7 @@ func (r *Response) Error(statusCode int, v any) error {
 	return r.json()
 }
 
+// Success returns a 200 OK response
 func (r *Response) Success(statusCode int, v any) error {
 	r.setOk(true)
 	r.setData(v)
@@ -83,6 +84,7 @@ func (r *Response) Success(statusCode int, v any) error {
 	return r.json()
 }
 
+// UnprocessableEntity returns a 422 Unprocessable Entity response
 func (r *Response) UnprocessableEntity(v any) error {
 	return r.Error(http.StatusUnprocessableEntity, v)
 }

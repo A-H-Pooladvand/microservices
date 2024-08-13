@@ -23,9 +23,9 @@ import (
 
 var serveCmd = &cobra.Command{
 	Use:   "serve",
-	Short: "serves the application",
-	// Provide the necessary protocols such as gRPC, HTTP, etc...
-	Run: runApplication,
+	Short: "Start the application",
+	Long:  "Serve the application and start the server",
+	Run:   runApplication,
 }
 
 func runApplication(cmd *cobra.Command, args []string) {

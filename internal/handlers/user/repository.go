@@ -5,20 +5,20 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
-	"po/pkg/postgres"
+	"gorm.io/gorm"
 )
 
-type Repository struct {
-	DB *postgres.Client
+type repository struct {
+	DB *gorm.DB
 }
 
-func NewRepository(db *postgres.Client) *Repository {
-	return &Repository{
+func NewRepository(db *gorm.DB) Repository {
+	return &repository{
 		DB: db,
 	}
 }
 
-func (r Repository) All(ctx context.Context) {
+func (r repository) All(ctx context.Context) {
 	tracer := otel.Tracer("app")
 	_, span := tracer.Start(
 		ctx,

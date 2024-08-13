@@ -7,6 +7,7 @@ import (
 	"po/internal/handlers"
 )
 
+// RegisterGrpcRoutes registers gRPC routes.
 func RegisterGrpcRoutes(server *grpc.Server, h *handlers.GrpcHandlers) {
 	ping.RegisterPingServiceServer(server, h.Ping)
 	user.RegisterUserServiceServer(server, h.User)

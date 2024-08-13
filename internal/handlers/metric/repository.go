@@ -1,14 +1,14 @@
 package metric
 
 import (
-	"po/pkg/postgres"
+	"gorm.io/gorm"
 )
 
 type Repository struct {
-	DB *postgres.Client
+	DB *gorm.DB
 }
 
-func NewRepository(db *postgres.Client) *Repository {
+func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{
 		DB: db,
 	}

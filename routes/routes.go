@@ -6,6 +6,7 @@ import (
 	"po/internal/handlers"
 )
 
+// RegisterWebRoutes registers web routes.
 func RegisterWebRoutes(e *echo.Echo, w *handlers.RestHandlers) {
 	e.GET("/metrics", w.Metric.Handle)
 

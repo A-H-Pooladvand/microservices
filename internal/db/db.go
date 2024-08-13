@@ -3,12 +3,14 @@ package db
 import (
 	"context"
 	"go.uber.org/fx"
+	"gorm.io/gorm"
 	"po/configs"
-	"po/pkg/postgres"
+	"po/pkg/db/postgres"
 )
 
-func New(lc fx.Lifecycle, config *configs.Postgres) *postgres.Client {
-	c, err := postgres.New(
+// New creates a new database connection.
+func New(lc fx.Lifecycle, config *configs.Postgres) *gorm.DB {
+	db, err := postgres.New(
 		postgres.NewConfig(
 			config.Host,
 			config.Port,
@@ -24,9 +26,15 @@ func New(lc fx.Lifecycle, config *configs.Postgres) *postgres.Client {
 			return err
 		},
 		OnStop: func(ctx context.Context) error {
-			return c.Close()
+			sql, err := db.DB()
+
+			if err != nil {
+				return err
+			}
+
+			return sql.Close()
 		},
 	})
 
-	return c
+	return db
 }

@@ -7,8 +7,8 @@ import (
 
 var cmd = &cobra.Command{
 	Use:   "app",
-	Short: "webserver",
-	Long:  `Initializing...`,
+	Short: "app is a simple application",
+	Long:  "app is a simple application",
 }
 
 func Execute() {

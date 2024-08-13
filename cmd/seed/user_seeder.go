@@ -1,18 +1,18 @@
 package seed
 
 import (
-	"po/internal/models"
-	"po/pkg/postgres"
+	"gorm.io/gorm"
+	"po/internal/handlers/user"
 )
 
 type UserSeeder struct {
-	model models.User
+	model user.User
 }
 
-func (u UserSeeder) Run(db *postgres.Client) {
-	var users []*models.User
+func (u UserSeeder) Run(db *gorm.DB) {
+	var users []*user.User
 	for i := 0; i < 10; i++ {
-		user := models.NewUser()
+		user := user.NewUser()
 		_ = user.Fake(user)
 		users = append(users, user)
 	}
