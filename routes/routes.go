@@ -18,5 +18,6 @@ func RegisterWebRoutes(e *echo.Echo, w *handlers.RestHandlers) {
 	{
 		usersGroup.GET("", w.User.Index)
 		usersGroup.GET(":id", w.User.Show)
+		usersGroup.POST("", w.User.Create)
 	}
 }

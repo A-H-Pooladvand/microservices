@@ -10,7 +10,7 @@ import (
 	"po/configs"
 	"po/internal/app"
 	"po/internal/db"
-	"po/internal/handlers/user"
+	"po/internal/model"
 	"po/internal/vault"
 	"po/pkg/log"
 	"po/pkg/logstash"
@@ -64,6 +64,6 @@ func runMigrations(cmd *cobra.Command, args []string) {
 
 func migrations() []any {
 	return []any{
-		user.User{},
+		model.User{},
 	}
 }

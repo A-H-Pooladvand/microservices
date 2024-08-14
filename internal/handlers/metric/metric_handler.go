@@ -5,7 +5,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/fx"
-	_ "po/internal/entity"
 	"po/pkg/trace"
 )
 

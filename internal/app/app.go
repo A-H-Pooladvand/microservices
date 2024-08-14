@@ -39,10 +39,14 @@ func LocalMessage() {
 	_, _ = warning.Println("----------------------------------------------------------------------------------------------------")
 }
 
-func GetContext(c echo.Context) (*Context, bool) {
+func GetContext(c echo.Context) *Context {
 	ctx, ok := c.(*Context)
 
-	return ctx, ok
+	if !ok {
+		zap.L().Panic("unable to get context")
+	}
+
+	return ctx
 }
 
 func LoadEnvironmentVariablesInLocalEnv() {

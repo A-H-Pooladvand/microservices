@@ -12,6 +12,7 @@ import (
 	"os/signal"
 	"po/configs"
 	"po/internal/handlers"
+	"po/pkg/validator"
 	"po/routes"
 )
 
@@ -23,9 +24,13 @@ func Invoke(
 ) *echo.Echo {
 	e := echo.New()
 
-	RegisterMiddlewares(e, r)
 	e.HideBanner = true
 	e.HidePort = true
+
+	e.Validator = validator.New()
+
+	RegisterMiddlewares(e, r)
+
 	routes.RegisterWebRoutes(e, w)
 
 	lc.Append(fx.Hook{

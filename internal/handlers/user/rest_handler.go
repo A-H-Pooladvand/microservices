@@ -2,14 +2,11 @@ package user
 
 import (
 	"github.com/labstack/echo/v4"
-	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.uber.org/fx"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	"log"
-	"po/api/proto/ping/v1"
 	"po/internal/app"
-	_ "po/internal/entity"
+	"po/internal/handlers/user/dto"
+	request2 "po/internal/handlers/user/request"
+	"po/internal/transformer/user_transformer"
 	"po/pkg/trace"
 )
 
@@ -45,7 +42,7 @@ func NewRestHandler(params RestHandlerParams) RestHandler {
 //	@Failure		500	{object}	error
 //	@Router			/api/v1/users [get]
 func (h RestHandler) Index(c echo.Context) error {
-	ctx, _ := app.GetContext(c)
+	ctx := app.GetContext(c)
 
 	tracer := h.tracer.FromContext(ctx.GetContext())
 
@@ -56,34 +53,19 @@ func (h RestHandler) Index(c echo.Context) error {
 
 	defer span.End()
 
-	h.service.GetAllUsers(spanContext)
-
-	conn, err := grpc.DialContext(
-		spanContext,
-		"127.0.0.1:8501",
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithStatsHandler(otelgrpc.NewClientHandler()),
-	)
-
-	if err != nil {
-		log.Fatalf("did not connect: %v", err)
-	}
-	defer conn.Close()
-	client := ping.NewPingServiceClient(conn)
-
-	r, err := client.Ping(spanContext, &ping.PingRequest{Name: "Amirhossein"})
-	if err != nil {
-		log.Fatalf("could not greet: %v", err)
-	}
-	log.Printf("Greeting: %s", r.GetMessage())
-
-	return ctx.R().Ok(map[string]any{
-		"data": "Hello World",
+	users, err := h.service.GetAllUsers(spanContext, dto.GetAllUsers{
+		Filter: ctx.Filter(),
 	})
+
+	if err != nil {
+		return ctx.R().SetMessage(err.Error()).NotFound()
+	}
+
+	return ctx.R().Ok(user_transformer.All(users))
 }
 
 func (h RestHandler) Show(c echo.Context) error {
-	ctx, _ := app.GetContext(c)
+	ctx := app.GetContext(c)
 	tracer := h.tracer.FromContext(ctx.GetContext())
 
 	_, span := tracer.Start(
@@ -92,6 +74,27 @@ func (h RestHandler) Show(c echo.Context) error {
 	)
 
 	defer span.End()
+
+	return ctx.R().Ok("ok")
+}
+
+func (h RestHandler) Create(c echo.Context) error {
+	ctx := app.GetContext(c)
+
+	tracer := h.tracer.FromContext(ctx.GetContext())
+
+	_, span := tracer.Start(
+		c.Request().Context(),
+		"User RestHandler",
+	)
+
+	defer span.End()
+
+	var request request2.Request
+
+	if err := ctx.Validate(&request); err != nil {
+		return err
+	}
 
 	return ctx.R().Ok("ok")
 }

@@ -1,9 +1,7 @@
-package user
-
-import "po/internal/model"
+package model
 
 type User struct {
-	model.Model
+	Model
 	Name     string `json:"name" faker:"first_name"`
 	LastName string `json:"last_name" faker:"last_name"`
 }
