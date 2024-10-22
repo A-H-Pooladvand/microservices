@@ -50,6 +50,10 @@ func Invoke(lc fx.Lifecycle, l *logstash.Client) {
 	})
 }
 
+func Logger() *zap.Logger {
+	return zap.L()
+}
+
 func Error(msg string, fields ...zap.Field) {
 	zap.L().Error(msg, fields...)
 }

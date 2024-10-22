@@ -6,6 +6,7 @@ import (
 	"po/configs"
 	"po/internal/app"
 	"po/internal/db"
+	"po/internal/etcd"
 	"po/internal/grpc"
 	"po/internal/handlers"
 	"po/internal/handlers/metric"
@@ -41,6 +42,7 @@ func runApplication(cmd *cobra.Command, args []string) {
 			configs.NewRabbitMQ,
 			configs.NewRedis,
 			configs.NewJaeger,
+			configs.NewEtcd,
 			vault.NewConfig,
 			configs.NewPostgres,
 			db.New,
@@ -50,6 +52,7 @@ func runApplication(cmd *cobra.Command, args []string) {
 			rabbitmq.Provide,
 			trace.Provide,
 			prometheus.Provide,
+			etcd.Provide,
 
 			handlers.NewRestHandlers,
 			handlers.NewGrpcHandlers,
