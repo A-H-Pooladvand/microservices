@@ -3,7 +3,6 @@ package webserver
 import (
 	"context"
 	"errors"
-	"github.com/fatih/color"
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/fx"
@@ -35,8 +34,6 @@ func Invoke(
 
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
-			color.Green("⇨ http server started on http://127.0.0.1:%v\n", c.AppPort)
-
 			go func() {
 				if err := e.Start(":" + c.AppPort); err != nil && !errors.Is(err, http.ErrServerClosed) {
 					e.Logger.Fatal("shutting down the server")

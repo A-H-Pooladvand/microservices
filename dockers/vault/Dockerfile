@@ -7,4 +7,6 @@ COPY entrypoint.sh /vault/entrypoint.sh
 
 RUN chmod +x /vault/entrypoint.sh
 
-ENTRYPOINT ["/vault/entrypoint.sh"]
+RUN dos2unix /vault/entrypoint.sh
+
+ENTRYPOINT ["/bin/bash", "/vault/entrypoint.sh"]

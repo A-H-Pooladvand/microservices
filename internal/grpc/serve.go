@@ -2,7 +2,6 @@ package grpc
 
 import (
 	"context"
-	"github.com/fatih/color"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
@@ -34,8 +33,6 @@ func Invoke(lc fx.Lifecycle, config *configs.App, h *handlers.GrpcHandlers) *grp
 			routes.RegisterGrpcRoutes(server, h)
 
 			go func() {
-				color.Green("gRPC server started on [::]:" + config.GrpcPort)
-
 				if err = server.Serve(lis); err != nil {
 					log.Error("GRPC serve error", zap.Error(err))
 				}

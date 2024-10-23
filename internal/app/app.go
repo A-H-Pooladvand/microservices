@@ -9,14 +9,6 @@ import (
 	"strings"
 )
 
-func GetEnv(key string) string {
-	return os.Getenv(key)
-}
-
-func SetEnv(key, value string) error {
-	return os.Setenv(key, value)
-}
-
 func Production() bool {
 	env := strings.ToLower(os.Getenv("APP_ENV"))
 

@@ -1,5 +1,6 @@
 services:
   vault-server:
+    container_name: vault
     build: ./
     cap_add:
       - IPC_LOCK

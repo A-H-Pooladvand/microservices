@@ -1,7 +1,11 @@
 package cmd
 
 import (
+	"context"
+	"fmt"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.uber.org/fx"
 	"po/configs"
 	"po/internal/app"
@@ -67,6 +71,15 @@ func runApplication(cmd *cobra.Command, args []string) {
 			//apm.Provide,
 			grpc.Invoke,
 			webserver.Invoke,
+			func(config *configs.App) {
+				color.Green("⇨ http server started on http://127.0.0.1:%v\n", config.AppPort)
+				color.Green("gRPC server started on [::]:" + config.GrpcPort)
+			},
+			func(c *clientv3.Client) {
+				r, err := c.Get(context.TODO(), "demo")
+
+				fmt.Println(r, err)
+			},
 		),
 	)
 	app.LocalMessage()
