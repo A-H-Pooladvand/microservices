@@ -1,0 +1,55 @@
+# Ignore temporary files and build artifacts
+*.test          # Go test binaries
+*.out           # Go test coverage files
+*.o             # Object files
+*.a             # Archive files
+/tmp/* # Temporary directories/files
+
+# Ignore the Go module cache and build cache generated locally
+# These are typically rebuilt or downloaded within the Docker container
+# unless using specific BuildKit cache mounts.
+go.sum          # go.sum is needed to verify dependencies during go mod download
+go.mod          # go.mod is needed to determine dependencies
+# However, if you copy go.mod/go.sum separately before copying the rest of the code
+# in your Dockerfile for caching purposes, you might ignore them in a later COPY step,
+# but they must be in the build context initially for the early COPY.
+# For simplicity in a basic .dockerignore, they are often NOT ignored here.
+
+# Ignore version control directories and files
+.git/
+.gitignore
+.hg/
+.svn/
+
+# Ignore IDE/editor specific files and directories
+.idea/
+.vscode/
+*.swp
+*.swo
+*.bak
+*~
+
+# Ignore operating system specific files
+.DS_Store
+Thumbs.db
+
+# Ignore configuration files not needed in the final image
+# Be careful with this - only ignore files that are strictly for local dev!
+.env
+config.yaml
+config-docker.yml
+secrets.json
+
+# Ignore logs and other runtime generated files
+*.log
+logs/
+
+# Optional: Ignore documentation or example directories not needed for the final build
+docs/
+examples/
+
+# Optional: Ignore the Dockerfile itself and .dockerignore
+# They are sent to the daemon for the build process regardless,
+# this just prevents them being accidentally copied into the image.
+Dockerfile
+.dockerignore

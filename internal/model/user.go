@@ -2,8 +2,8 @@ package model
 
 type User struct {
 	Model
-	Name     string `json:"name" faker:"first_name"`
-	LastName string `json:"last_name" faker:"last_name"`
+	Name    string `json:"name" faker:"first_name"`
+	Surname string `json:"last_name" faker:"last_name"`
 }
 
 func NewUser() *User {

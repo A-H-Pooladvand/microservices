@@ -8,8 +8,8 @@ import (
 type Response struct {
 	Ctx        echo.Context `json:"-"`
 	StatusCode int          `json:"-"`
-	OK         bool         `json:"ok"`
-	Message    string       `json:"message,omitempty"`
+	OK         bool         `json:"ok" example:"true"`
+	Message    string       `json:"message,omitempty" example:"Operation successful"`
 	Data       any          `json:"data,omitempty"`
 	Errors     any          `json:"errors,omitempty"`
 }

@@ -2,10 +2,10 @@ package logstash
 
 import (
 	"context"
+	"github.com/a-h-pooladvand/microservices/config"
 	"github.com/fatih/color"
 	"go.uber.org/fx"
 	"net"
-	"po/configs"
 )
 
 type Client struct {

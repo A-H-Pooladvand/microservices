@@ -2,6 +2,10 @@ package grpc
 
 import (
 	"context"
+	"github.com/a-h-pooladvand/microservices/config"
+	"github.com/a-h-pooladvand/microservices/internal/handler"
+	"github.com/a-h-pooladvand/microservices/internal/log"
+	"github.com/a-h-pooladvand/microservices/routes"
 	"github.com/fatih/color"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.uber.org/fx"
@@ -9,20 +13,16 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"net"
-	"po/configs"
-	"po/internal/handlers"
-	"po/pkg/log"
-	"po/routes"
 )
 
-func Invoke(lc fx.Lifecycle, config *configs.App, h *handlers.GrpcHandlers) *grpc.Server {
+func Invoke(lc fx.Lifecycle, config *config.Config, h *handler.Grpc) *grpc.Server {
 	server := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 	)
 
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
-			lis, err := net.Listen("tcp", ":"+config.GrpcPort)
+			lis, err := net.Listen("tcp", ":"+config.GRPC.Addr)
 
 			if err != nil {
 				return err
@@ -34,7 +34,7 @@ func Invoke(lc fx.Lifecycle, config *configs.App, h *handlers.GrpcHandlers) *grp
 			routes.RegisterGrpcRoutes(server, h)
 
 			go func() {
-				color.Green("gRPC server started on [::]:" + config.GrpcPort)
+				color.Green("gRPC server started on [::]:" + config.GRPC.Addr)
 
 				if err = server.Serve(lis); err != nil {
 					log.Error("GRPC serve error", zap.Error(err))

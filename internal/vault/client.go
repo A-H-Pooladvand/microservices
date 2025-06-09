@@ -3,9 +3,9 @@ package vault
 import (
 	"context"
 	"errors"
+	"github.com/a-h-pooladvand/microservices/internal/app"
+	"github.com/a-h-pooladvand/microservices/pkg/vault"
 	"go.uber.org/fx"
-	"po/internal/app"
-	"po/pkg/vault"
 )
 
 // New vault implementation

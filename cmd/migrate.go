@@ -2,18 +2,16 @@ package cmd
 
 import (
 	"context"
+	"github.com/a-h-pooladvand/microservices/config"
+	"github.com/a-h-pooladvand/microservices/internal/fx/invoke"
+	"github.com/a-h-pooladvand/microservices/internal/fx/module"
+	"github.com/a-h-pooladvand/microservices/internal/log"
+	"github.com/a-h-pooladvand/microservices/internal/model"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
-	"po/configs"
-	"po/internal/app"
-	"po/internal/db"
-	"po/internal/model"
-	"po/internal/vault"
-	"po/pkg/log"
-	"po/pkg/logstash"
 )
 
 var migrateCmd = &cobra.Command{
@@ -23,47 +21,32 @@ var migrateCmd = &cobra.Command{
 }
 
 func runMigrations(cmd *cobra.Command, args []string) {
-	app.LoadEnvironmentVariablesInLocalEnv()
-
 	application := fx.New(
-		fx.Provide(
-			// Loading configs
-			configs.NewApp,
-			configs.NewLogstash,
-			configs.NewPostgres,
-			vault.NewConfig,
-			// Loading services
-			logstash.New,
-			vault.Provide,
-			db.New,
-		),
+		module.Vault,
+		module.Postgres,
 
 		fx.Invoke(
-			log.Invoke,
+			invoke.Log,
 			//apm.Invoke,
 			func(db *gorm.DB) {
 				err := db.AutoMigrate(
-					migrations()...,
+					model.Models...,
 				)
 
 				if err != nil {
-					zap.L().Fatal("failed to run the migrations", zap.Error(err))
+					log.Fatal("failed to run the migrations", zap.Error(err))
 				}
 			},
 		),
+		fx.Provide(
+			config.New,
+		),
 	)
-	app.LocalMessage()
 
 	if err := application.Start(context.Background()); err != nil {
-		zap.L().Fatal("failed to start the application", zap.Error(err))
+		log.Fatal("failed to start the application", zap.Error(err))
 
 		return
 	}
 	color.Green("All migrations completed successfully")
-}
-
-func migrations() []any {
-	return []any{
-		model.User{},
-	}
 }

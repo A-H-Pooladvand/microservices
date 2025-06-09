@@ -1,8 +1,8 @@
 package seed
 
 import (
+	"github.com/a-h-pooladvand/microservices/internal/model"
 	"gorm.io/gorm"
-	"po/internal/model"
 )
 
 type UserSeeder struct {

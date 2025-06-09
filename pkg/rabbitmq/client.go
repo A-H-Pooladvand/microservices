@@ -3,9 +3,9 @@ package rabbitmq
 import (
 	"context"
 	"fmt"
+	"github.com/a-h-pooladvand/microservices/config"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"go.uber.org/fx"
-	"po/configs"
 )
 
 type Client struct {

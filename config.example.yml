@@ -1,0 +1,28 @@
+app:
+  Name: app-0
+  Env: dev
+  Debug: true
+  Port: 8000
+
+jaeger:
+  Addr: 127.0.0.1:6831
+  Username:
+  Password:
+  SamplingRatio: 1
+
+mysql:
+  Host: 127.0.0.1
+  Port: 3306
+  Username: root
+  Password: 1
+  Db: app
+  Timeout: 10
+
+redis:
+    Addr: 127.0.0.1:6379
+    User: ""
+    Password: ""
+
+grpc:
+  addr: ""
+  UseTLS: false

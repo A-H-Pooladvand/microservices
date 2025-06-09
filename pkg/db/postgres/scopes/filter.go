@@ -1,8 +1,8 @@
 package scopes
 
 import (
+	f "github.com/a-h-pooladvand/microservices/internal/filter"
 	"gorm.io/gorm"
-	f "po/internal/Filter"
 )
 
 // filter is a function that can be used to filter the results of a query.

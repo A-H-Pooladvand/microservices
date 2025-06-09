@@ -2,23 +2,18 @@ package cmd
 
 import (
 	"context"
+	"github.com/a-h-pooladvand/microservices/cmd/seed"
+	"github.com/a-h-pooladvand/microservices/internal/fx/invoke"
+	"github.com/a-h-pooladvand/microservices/internal/fx/module"
+	"github.com/a-h-pooladvand/microservices/internal/log"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
-	"po/cmd/seed"
-	"po/configs"
-	"po/internal/app"
-	"po/internal/db"
-	"po/internal/vault"
-	"po/pkg/log"
-	"po/pkg/logstash"
 )
 
-var seeders = []seed.Seeder{
-	seed.UserSeeder{},
-}
+var seeders []seed.Seeder
 
 var seedCmd = &cobra.Command{
 	Use:   "seed",
@@ -27,23 +22,12 @@ var seedCmd = &cobra.Command{
 }
 
 func runSeeders(cmd *cobra.Command, args []string) {
-	app.LoadEnvironmentVariablesInLocalEnv()
-
 	application := fx.New(
-		fx.Provide(
-			// Loading configs
-			configs.NewApp,
-			configs.NewLogstash,
-			configs.NewPostgres,
-			vault.NewConfig,
-			// Loading services
-			logstash.New,
-			vault.Provide,
-			db.New,
-		),
+		module.Vault,
+		module.Postgres,
 
 		fx.Invoke(
-			log.Invoke,
+			invoke.Log,
 			//apm.Invoke,
 			func(db *gorm.DB) {
 				for _, seeder := range seeders {
@@ -52,10 +36,9 @@ func runSeeders(cmd *cobra.Command, args []string) {
 			},
 		),
 	)
-	app.LocalMessage()
 
 	if err := application.Start(context.Background()); err != nil {
-		zap.L().Fatal("failed to seed the database", zap.Error(err))
+		log.Fatal("failed to seed the database", zap.Error(err))
 
 		return
 	}
