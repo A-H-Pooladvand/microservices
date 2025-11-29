@@ -31,7 +31,10 @@ func NewVault(lc fx.Lifecycle, cfg *config.Config) (*vault.Client, error) {
 		return nil, nil
 	}
 
-	client, err := vault.New(vaultCfg, zap.L())
+	// Use background context for initial client creation
+	// Health check will use proper context from lifecycle hook
+	ctx := context.Background()
+	client, err := vault.New(ctx, vaultCfg, zap.L())
 	if err != nil {
 		return nil, err
 	}

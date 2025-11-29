@@ -118,21 +118,18 @@ func (c *Client) beforeCallback(operation string) func(*gorm.DB) {
 			return
 		}
 
-		ctx, span := c.tracer.StartWithAttributes(db.Statement.Context, "postgres."+operation,
+		ctx, _ := c.tracer.StartWithAttributes(db.Statement.Context, "postgres."+operation,
 			observability.AttrDBSystem.String("postgresql"),
 			observability.AttrDBName.String(c.config.DB),
 			observability.AttrDBOperation.String(operation),
 		)
 
+		// Store start time and update context (span is already in ctx)
 		db.Statement.Context = context.WithValue(ctx, spanKey{}, spanData{
 			startTime: time.Now(),
 		})
 
 		c.metrics.ConnectionsActive.Add(ctx, 1)
-
-		// Set the span in the context
-		db.Statement.Context = ctx
-		_ = span // span will be ended in afterCallback
 	}
 }
 

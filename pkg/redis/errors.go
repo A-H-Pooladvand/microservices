@@ -4,8 +4,8 @@ import "errors"
 
 // Redis errors.
 var (
-	// ErrInvalidAddress is returned when the address is invalid.
-	ErrInvalidAddress = errors.New("redis: invalid address")
+	// ErrInvalidAddress is returned when the address is invalid or empty.
+	ErrInvalidAddress = errors.New("redis: address is required")
 	// ErrConnectionFailed is returned when the connection fails.
 	ErrConnectionFailed = errors.New("redis: connection failed")
 	// ErrKeyNotFound is returned when a key is not found.

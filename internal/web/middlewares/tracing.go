@@ -6,6 +6,7 @@ import (
 	"github.com/a-h-pooladvand/microservices/pkg/observability"
 	"github.com/labstack/echo/v4"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/propagation"
 	semconv "go.opentelemetry.io/otel/semconv/v1.20.0"
@@ -78,7 +79,7 @@ func Tracing(cfg TracingConfig) echo.MiddlewareFunc {
 			if err != nil {
 				observability.SetSpanError(span, err)
 			} else if statusCode >= 400 {
-				span.SetStatus(500, "HTTP error")
+				span.SetStatus(codes.Error, "HTTP error")
 			} else {
 				observability.SetSpanOK(span)
 			}

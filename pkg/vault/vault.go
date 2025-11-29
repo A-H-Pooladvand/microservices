@@ -31,7 +31,8 @@ type OperationMetrics struct {
 }
 
 // New creates a new Vault client with observability.
-func New(cfg Config, logger *zap.Logger) (*Client, error) {
+// The context is used for the initial login operation if credentials are provided.
+func New(ctx context.Context, cfg Config, logger *zap.Logger) (*Client, error) {
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
@@ -105,7 +106,7 @@ func New(cfg Config, logger *zap.Logger) (*Client, error) {
 
 	// Login if credentials are provided
 	if cfg.RoleID != "" && cfg.SecretID != "" {
-		if _, err := client.login(context.Background()); err != nil {
+		if _, err := client.login(ctx); err != nil {
 			return nil, fmt.Errorf("vault login failed: %w", err)
 		}
 	}
