@@ -26,6 +26,7 @@ type Config struct {
 	RabbitMQ  RabbitMQ `mapstructure:"rabbitmq"`
 	Redis     Redis    `mapstructure:"redis"`
 	GRPC      GRPC     `mapstructure:"grpc"`
+	Vault     Vault    `mapstructure:"vault"`
 }
 
 func New() *Config {

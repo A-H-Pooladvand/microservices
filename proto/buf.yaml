@@ -1,7 +1,10 @@
-version: v1
+version: v2
+modules:
+  - path: .
+    name: buf.build/a-h-pooladvand/microservices
 breaking:
   use:
     - FILE
 lint:
   use:
-    - DEFAULT
+    - STANDARD

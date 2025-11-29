@@ -1,36 +1,46 @@
 package module
 
 import (
+	"context"
+
+	"github.com/a-h-pooladvand/microservices/config"
 	"github.com/a-h-pooladvand/microservices/pkg/vault"
 	"go.uber.org/fx"
+	"go.uber.org/zap"
 )
 
 var Vault = fx.Module("vault", fx.Provide(
-	vault.NewConfig,
 	NewVault,
 ))
 
-func NewVault(lc fx.Lifecycle, config vault.Config) (*vault.Client, error) {
-	// Todo: implement if env == "local" return nil, nil
-	return nil, nil
+// NewVault creates a new Vault client with observability.
+// Returns nil if Vault is not configured (local development).
+func NewVault(lc fx.Lifecycle, cfg *config.Config) (*vault.Client, error) {
+	// Skip if vault is not configured
+	if cfg.Vault.Address == "" {
+		return nil, nil
+	}
 
-	//	if config.Empty() {
-	//		return nil, errors.New(`Due to production constraints, vault environment variables are unavailable.
-	//Please specify the Config configuration.`)
-	//	}
-	//
-	//	client, err := vault.New(vault.Config{
-	//		Address:   config.Address,
-	//		RoleID:    config.RoleID,
-	//		SecretId:  config.SecretId,
-	//		MountPath: config.MountPath,
-	//	})
-	//
-	//	lc.Append(fx.Hook{
-	//		OnStart: func(ctx context.Context) error {
-	//			return err
-	//		},
-	//	})
-	//
-	//	return client, nil
+	vaultCfg := vault.NewConfig(
+		cfg.Vault.Address,
+		cfg.Vault.RoleID,
+		cfg.Vault.SecretID,
+	)
+
+	if vaultCfg.Empty() {
+		return nil, nil
+	}
+
+	client, err := vault.New(vaultCfg, zap.L())
+	if err != nil {
+		return nil, err
+	}
+
+	lc.Append(fx.Hook{
+		OnStart: func(ctx context.Context) error {
+			return client.Health(ctx)
+		},
+	})
+
+	return client, nil
 }

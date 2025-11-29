@@ -2,6 +2,8 @@ package module
 
 import (
 	"context"
+	"fmt"
+
 	"github.com/a-h-pooladvand/microservices/config"
 	"github.com/a-h-pooladvand/microservices/pkg/db/postgres"
 	"go.uber.org/fx"
@@ -10,36 +12,39 @@ import (
 
 var Postgres = fx.Module("postgres", fx.Provide(
 	NewPostgres,
+	ProvideGormDB,
 ))
 
-// NewPostgres New creates a new database connection.
-func NewPostgres(lc fx.Lifecycle, config *config.Config) *gorm.DB {
-	db, err := postgres.New(
+// NewPostgres creates a new database connection with observability.
+func NewPostgres(lc fx.Lifecycle, cfg *config.Config) (*postgres.Client, error) {
+	client, err := postgres.New(
 		postgres.NewConfig(
-			config.Postgres.Host,
-			config.Postgres.Port,
-			config.Postgres.Username,
-			config.Postgres.Password,
-			config.Postgres.DB,
-			config.Postgres.Timeout,
-			//config.App.Debuggable(),
+			cfg.Postgres.Host,
+			cfg.Postgres.Port,
+			cfg.Postgres.Username,
+			cfg.Postgres.Password,
+			cfg.Postgres.DB,
+			cfg.Postgres.Timeout,
 		),
 	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create postgres client: %w", err)
+	}
 
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
-			return err
+			return client.Ping(ctx)
 		},
 		OnStop: func(ctx context.Context) error {
-			sql, err := db.DB()
-
-			if err != nil {
-				return err
-			}
-
-			return sql.Close()
+			return client.Close()
 		},
 	})
 
-	return db
+	return client, nil
+}
+
+// ProvideGormDB extracts the underlying gorm.DB from the postgres client.
+// This maintains backward compatibility with existing code.
+func ProvideGormDB(client *postgres.Client) *gorm.DB {
+	return client.DB
 }
