@@ -1,0 +1,116 @@
+definitions:
+  request.Request:
+    properties:
+      name:
+        example: John
+        maxLength: 50
+        minLength: 2
+        type: string
+      surname:
+        example: Doe
+        maxLength: 50
+        minLength: 2
+        type: string
+    required:
+    - name
+    - surname
+    type: object
+  response.Response:
+    properties:
+      data: {}
+      errors: {}
+      message:
+        example: Operation successful
+        type: string
+      ok:
+        example: true
+        type: boolean
+    type: object
+  response.User:
+    properties:
+      created_at:
+        example: "2023-10-01T12:00:00Z"
+        type: string
+      deleted_at:
+        example: "2023-10-01T12:00:00Z"
+        type: string
+      id:
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      name:
+        example: John
+        type: string
+      surname:
+        example: Doe
+        type: string
+      updated_at:
+        example: "2023-10-01T12:00:00Z"
+        type: string
+    type: object
+  response.UserResponse:
+    properties:
+      data:
+        $ref: '#/definitions/response.User'
+      ok:
+        example: true
+        type: boolean
+    type: object
+externalDocs:
+  description: OpenAPI
+  url: https://swagger.io/resources/open-api/
+host: 127.0.0.1:8000
+info:
+  contact:
+    email: a.h.pooladvand@gmail.com
+    name: API Support
+    url: https://example.com/support
+  description: Application description.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: https://example.com/terms
+  title: Application API
+  version: "1.0"
+paths:
+  /api/v1/users:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user in the system.
+      parameters:
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/request.Request'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/response.Response'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/response.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: Create a new user
+      tags:
+      - Users
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"

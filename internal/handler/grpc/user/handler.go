@@ -3,7 +3,7 @@ package user
 import (
 	"context"
 	"fmt"
-	grpc "github.com/a-h-pooladvand/microservices/api/proto/user/v1"
+	grpc "github.com/a-h-pooladvand/microservices/api/user/v1"
 	"go.uber.org/fx"
 )
 
