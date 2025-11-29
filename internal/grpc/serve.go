@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"net"
+	"time"
 )
 
 func Invoke(lc fx.Lifecycle, config *config.Config, h *handler.Grpc) *grpc.Server {
@@ -22,6 +23,12 @@ func Invoke(lc fx.Lifecycle, config *config.Config, h *handler.Grpc) *grpc.Serve
 
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
+			// Skip gRPC server if address is not configured
+			if config.GRPC.Addr == "" {
+				log.Info("gRPC server disabled (no address configured)")
+				return nil
+			}
+
 			lis, err := net.Listen("tcp", ":"+config.GRPC.Addr)
 
 			if err != nil {
@@ -44,7 +51,20 @@ func Invoke(lc fx.Lifecycle, config *config.Config, h *handler.Grpc) *grpc.Serve
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
-			server.Stop()
+			// Use GracefulStop with timeout for production
+			done := make(chan struct{})
+			go func() {
+				server.GracefulStop()
+				close(done)
+			}()
+
+			select {
+			case <-done:
+				log.Info("gRPC server stopped gracefully")
+			case <-time.After(30 * time.Second):
+				log.Warn("gRPC server graceful shutdown timed out, forcing stop")
+				server.Stop()
+			}
 
 			return nil
 		},

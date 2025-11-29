@@ -3,6 +3,7 @@ package vault
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	vault "github.com/hashicorp/vault/api"
 	auth "github.com/hashicorp/vault/api/auth/approle"
 )
@@ -27,7 +28,9 @@ func New(config Config) (*Client, error) {
 		conn:   vc,
 	}
 
-	client.login(context.Background())
+	if _, err := client.login(context.Background()); err != nil {
+		return nil, fmt.Errorf("vault login failed: %w", err)
+	}
 
 	return client, nil
 }

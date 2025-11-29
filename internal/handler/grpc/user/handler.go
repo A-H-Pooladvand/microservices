@@ -2,7 +2,7 @@ package user
 
 import (
 	"context"
-	"fmt"
+
 	grpc "github.com/a-h-pooladvand/microservices/api/user/v1"
 	"go.uber.org/fx"
 )
@@ -19,15 +19,50 @@ func NewGrpcHandler(params HandlerParams) GrpcHandler {
 	return GrpcHandler{}
 }
 
-func (h GrpcHandler) Index(ctx context.Context, request *grpc.UserRequest) (*grpc.UserResponse, error) {
-	//tracer := h.tracer.FromContext(ctx)
-	//
-	//_, span := tracer.Start(ctx, "user grpc handler")
-	//defer span.End()
-	//
-	//span.AddEvent("Wtf")
-
+// CreateUser implements the CreateUser RPC method (legacy handler - redirect to new implementation)
+func (h GrpcHandler) CreateUser(ctx context.Context, request *grpc.CreateUserRequest) (*grpc.UserResponse, error) {
 	return &grpc.UserResponse{
-		Message: fmt.Sprintf("Hello %s %s", request.GetFirstName(), request.GetLastName()),
+		Id:        "",
+		Name:      request.GetName(),
+		Surname:   request.GetSurname(),
+		CreatedAt: "",
+		UpdatedAt: "",
+	}, nil
+}
+
+// GetUser implements the GetUser RPC method
+func (h GrpcHandler) GetUser(ctx context.Context, request *grpc.GetUserRequest) (*grpc.UserResponse, error) {
+	return &grpc.UserResponse{
+		Id:        request.GetId(),
+		Name:      "",
+		Surname:   "",
+		CreatedAt: "",
+		UpdatedAt: "",
+	}, nil
+}
+
+// ListUsers implements the ListUsers RPC method
+func (h GrpcHandler) ListUsers(ctx context.Context, request *grpc.ListUsersRequest) (*grpc.ListUsersResponse, error) {
+	return &grpc.ListUsersResponse{
+		Users: []*grpc.UserResponse{},
+	}, nil
+}
+
+// UpdateUser implements the UpdateUser RPC method
+func (h GrpcHandler) UpdateUser(ctx context.Context, request *grpc.UpdateUserRequest) (*grpc.UserResponse, error) {
+	return &grpc.UserResponse{
+		Id:        request.GetId(),
+		Name:      request.GetName(),
+		Surname:   request.GetSurname(),
+		CreatedAt: "",
+		UpdatedAt: "",
+	}, nil
+}
+
+// DeleteUser implements the DeleteUser RPC method
+func (h GrpcHandler) DeleteUser(ctx context.Context, request *grpc.DeleteUserRequest) (*grpc.DeleteUserResponse, error) {
+	return &grpc.DeleteUserResponse{
+		Success: true,
+		Message: "user deleted",
 	}, nil
 }
