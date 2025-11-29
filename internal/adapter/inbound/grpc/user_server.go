@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"errors"
 
 	pb "github.com/a-h-pooladvand/microservices/api/user/v1"
 	"github.com/a-h-pooladvand/microservices/internal/core/domain"
@@ -141,10 +142,10 @@ func toProtoUser(user *domain.User) *pb.UserResponse {
 
 // isNotFoundError checks if the error is a not found error.
 func isNotFoundError(err error) bool {
-	return err != nil && err.Error() == domain.ErrUserNotFound.Error()
+	return errors.Is(err, domain.ErrUserNotFound)
 }
 
 // isValidationError checks if the error is a validation error.
 func isValidationError(err error) bool {
-	return err != nil && err.Error() == domain.ErrInvalidUser.Error()
+	return errors.Is(err, domain.ErrInvalidUser)
 }

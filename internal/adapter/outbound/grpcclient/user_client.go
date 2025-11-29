@@ -2,6 +2,7 @@ package grpcclient
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	pb "github.com/a-h-pooladvand/microservices/api/user/v1"
@@ -122,17 +123,17 @@ func (c *UserServiceClient) DeleteUser(ctx context.Context, id uuid.UUID) error 
 func protoToDomainUser(resp *pb.UserResponse) (*domain.User, error) {
 	id, err := uuid.Parse(resp.GetId())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("invalid user ID: %w", err)
 	}
 
-	createdAt, err := time.Parse("2006-01-02T15:04:05Z07:00", resp.GetCreatedAt())
+	createdAt, err := time.Parse(time.RFC3339, resp.GetCreatedAt())
 	if err != nil {
-		createdAt = time.Now()
+		return nil, fmt.Errorf("invalid created_at timestamp: %w", err)
 	}
 
-	updatedAt, err := time.Parse("2006-01-02T15:04:05Z07:00", resp.GetUpdatedAt())
+	updatedAt, err := time.Parse(time.RFC3339, resp.GetUpdatedAt())
 	if err != nil {
-		updatedAt = time.Now()
+		return nil, fmt.Errorf("invalid updated_at timestamp: %w", err)
 	}
 
 	return &domain.User{

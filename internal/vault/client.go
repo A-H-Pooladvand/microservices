@@ -20,8 +20,8 @@ func New(cfg Config) (*vault.Client, error) {
 }
 
 func Provide(lc fx.Lifecycle, cfg Config, appCfg *config.Config) (*vault.Client, error) {
-	// Skip vault in local/dev environment
-	if appCfg.App.Dev() {
+	// Skip vault in local environment
+	if appCfg.App.Local() {
 		return nil, nil
 	}
 
