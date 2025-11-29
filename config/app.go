@@ -4,7 +4,7 @@ import "strings"
 
 type App struct {
 	Name     string `mapstructure:"name"`
-	Port     string `mapstructure:"Port"`
+	Port     string `mapstructure:"port"`
 	Debug    string `mapstructure:"debug"`
 	Env      string `mapstructure:"env"`
 	Timezone string `mapstructure:"timezone"`
@@ -18,6 +18,11 @@ func (a App) Prod() bool {
 
 func (a App) Dev() bool {
 	return !a.Prod()
+}
+
+func (a App) Local() bool {
+	env := strings.ToLower(a.Env)
+	return env == "local" || env == "dev" || env == "development"
 }
 
 func (a App) Debuggable() bool {

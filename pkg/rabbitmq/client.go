@@ -31,7 +31,7 @@ func New(c Config) (*Client, error) {
 	}, nil
 }
 
-func Provide(lc fx.Lifecycle, c *configs.RabbitMQ) *Client {
+func Provide(lc fx.Lifecycle, c *config.RabbitMQ) *Client {
 	conn, err := New(Config{
 		Address:  c.Addr,
 		User:     c.User,

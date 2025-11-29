@@ -10,12 +10,12 @@ import (
 
 type Client struct {
 	conn   net.Conn
-	Config *configs.Logstash
+	Config *config.Logstash
 }
 
-func New(lc fx.Lifecycle, config *configs.Logstash) *Client {
+func New(lc fx.Lifecycle, cfg *config.Logstash) *Client {
 	c := &Client{
-		Config: config,
+		Config: cfg,
 	}
 
 	lc.Append(fx.Hook{

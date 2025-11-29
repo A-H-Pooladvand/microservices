@@ -3,7 +3,7 @@ package handler
 import (
 	"context"
 	"fmt"
-	"github.com/a-h-pooladvand/microservices/api/proto/ping/v1"
+	"github.com/a-h-pooladvand/microservices/api/ping/v1"
 )
 
 type Ping struct {

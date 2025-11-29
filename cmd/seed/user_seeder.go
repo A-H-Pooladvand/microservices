@@ -5,9 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type UserSeeder struct {
-	model model.User
-}
+type UserSeeder struct{}
 
 func (u UserSeeder) Run(db *gorm.DB) {
 	var users []*model.User

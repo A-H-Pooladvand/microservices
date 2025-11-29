@@ -1,28 +1,39 @@
 app:
   Name: app-0
-  Env: dev
+  Env: local  # Options: local, dev, staging, production
   Debug: true
   Port: 8000
+  Timezone: UTC
 
 jaeger:
-  Addr: 127.0.0.1:6831
+  Addr: 127.0.0.1:4317  # OTLP gRPC endpoint
   Username:
   Password:
-  SamplingRatio: 1
+  SamplingRatio: 1.0  # 1.0 = 100% sampling in dev, reduce in production
 
-mysql:
+postgres:
   Host: 127.0.0.1
-  Port: 3306
-  Username: root
-  Password: 1
-  Db: app
-  Timeout: 10
+  Port: 5432
+  Username: postgres
+  Password: postgres
+  Db: microservices
+  Timeout: 30
 
 redis:
-    Addr: 127.0.0.1:6379
-    User: ""
-    Password: ""
+  Addr: 127.0.0.1:6379
+  User: ""
+  Password: ""
 
 grpc:
-  addr: ""
+  addr: "9000"  # Leave empty to disable gRPC server
   UseTLS: false
+
+# RabbitMQ configuration (optional)
+rabbitmq:
+  addr: 127.0.0.1:5672
+  user: guest
+  pass: guest
+
+# Logstash configuration (optional)
+logstash:
+  address: 127.0.0.1:5000
