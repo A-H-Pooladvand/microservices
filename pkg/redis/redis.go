@@ -6,157 +6,304 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/bsm/redislock"
-	"github.com/redis/go-redis/v9"
-	"log"
 	"strconv"
 	"time"
+
+	"github.com/a-h-pooladvand/microservices/pkg/observability"
+	"github.com/bsm/redislock"
+	"github.com/redis/go-redis/v9"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
+	"go.uber.org/zap"
 )
 
-type Redis struct {
+// Client wraps go-redis client with observability support.
+type Client struct {
 	*redis.Client
-	lock *redislock.Client
+	lock    *redislock.Client
+	tracer  *observability.Tracer
+	metrics *observability.CacheMetrics
+	logger  *zap.Logger
 }
 
-func New(c Config) *Redis {
+// New creates a new Redis client with observability.
+func New(cfg Config, logger *zap.Logger) (*Client, error) {
+	if err := cfg.Validate(); err != nil {
+		return nil, err
+	}
+
 	client := redis.NewClient(&redis.Options{
-		//ClientName:            "",
-		//OnConnect:             nil,
-		Addr:     c.Address,
-		Username: c.User,
-		Password: c.Password,
-		//DB:       0,
+		Addr:            cfg.Address,
+		Username:        cfg.User,
+		Password:        cfg.Password,
+		DB:              cfg.DB,
+		MaxRetries:      cfg.MaxRetries,
+		PoolSize:        cfg.PoolSize,
+		MinIdleConns:    cfg.MinIdleConns,
+		DialTimeout:     cfg.DialTimeout,
+		ReadTimeout:     cfg.ReadTimeout,
+		WriteTimeout:    cfg.WriteTimeout,
+		PoolTimeout:     cfg.PoolTimeout,
+		ConnMaxIdleTime: cfg.ConnMaxIdleTime,
+		ConnMaxLifetime: cfg.ConnMaxLifetime,
 	})
 
-	r := &Redis{
-		Client: client,
-		lock:   redislock.New(client),
+	// Initialize observability
+	tracer := observability.NewTracer("redis")
+	meter := observability.NewMeter("redis")
+	metrics, err := observability.NewCacheMetrics(meter, "redis")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create cache metrics: %w", err)
 	}
 
-	return r
+	if logger == nil {
+		logger = zap.NewNop()
+	}
+
+	return &Client{
+		Client:  client,
+		lock:    redislock.New(client),
+		tracer:  tracer,
+		metrics: metrics,
+		logger:  logger,
+	}, nil
 }
 
-// Transaction acquires a distributed lock for the given key with retry attempts,
-// executes the provided function f, and then releases the lock.
-// It handles lock acquisition failures with retries and ensures the lock is
-// released using defer.
-//
-// key: The key to lock.
-// ttl: The maximum time the lock should be held.
-// opt: Optional settings for acquiring the lock (applied to each retry attempt).
-// f: The function to execute while holding the lock. It receives
-//
-//	the Redis client instance and should return an error if
-//	the operation within the transaction fails.
-//
-// Returns redislock.ErrNotObtained if the lock could not be acquired
-// after all retry attempts, or any other error encountered during
-// lock acquisition or the execution of the provided function.
-func (r *Redis) Transaction(
-	ctx context.Context,
-	key string,
-	f func(tx *Redis) error,
-) error {
-	ctx, cancel := context.WithDeadline(
-		ctx,
-		time.Now().Add(time.Minute*2),
+// Get retrieves a value by key with tracing.
+func (c *Client) Get(ctx context.Context, key string) *redis.StringCmd {
+	ctx, span := c.tracer.StartWithAttributes(ctx, "redis.GET",
+		attribute.String("db.system", "redis"),
+		attribute.String("db.operation", "GET"),
+		attribute.String("db.redis.key", key),
 	)
+	defer span.End()
 
-	defer cancel()
-	lock, err := r.lock.Obtain(ctx, key+"-lock", time.Minute*2, &redislock.Options{
-		RetryStrategy: redislock.LimitRetry(redislock.LinearBackoff(500*time.Millisecond), 10),
-	})
+	startTime := time.Now()
+	cmd := c.Client.Get(ctx, key)
 
-	if err != nil {
-		return err
+	c.recordMetrics(ctx, "GET", startTime, cmd.Err())
+
+	if cmd.Err() != nil && !errors.Is(cmd.Err(), redis.Nil) {
+		observability.SetSpanError(span, cmd.Err())
+		c.logger.Error("redis GET failed", zap.String("key", key), zap.Error(cmd.Err()))
+	} else {
+		observability.SetSpanOK(span)
+		if errors.Is(cmd.Err(), redis.Nil) {
+			c.metrics.MissesTotal.Add(ctx, 1)
+		} else {
+			c.metrics.HitsTotal.Add(ctx, 1)
+		}
 	}
 
-	// If we are here, the lock was successfully obtained (err == nil)
-
-	// Ensure the lock is released when the function exits.
-	// We capture the error from Release to handle it separately.
-	defer func() {
-		releaseErr := lock.Release(ctx)
-		if releaseErr != nil {
-			// Log a warning or error if releasing the lock fails.
-			// This is important because the critical section might
-			// have succeeded, but the cleanup failed.
-			log.Printf("failed to release lock for key %s: %v\n", key, releaseErr)
-		}
-	}()
-
-	// Return the error from the executed function
-	return f(r)
+	return cmd
 }
 
-func (r *Redis) Set(ctx context.Context, key string, value any, ttl time.Duration) *redis.StatusCmd {
-	normalizedValue, err := r.normalize(value)
+// Set stores a value with tracing.
+func (c *Client) Set(ctx context.Context, key string, value any, ttl time.Duration) *redis.StatusCmd {
+	ctx, span := c.tracer.StartWithAttributes(ctx, "redis.SET",
+		attribute.String("db.system", "redis"),
+		attribute.String("db.operation", "SET"),
+		attribute.String("db.redis.key", key),
+		attribute.Int64("db.redis.ttl_ms", ttl.Milliseconds()),
+	)
+	defer span.End()
 
+	startTime := time.Now()
+	normalizedValue, err := c.normalize(value)
 	if err != nil {
+		observability.SetSpanError(span, err)
 		return redis.NewStatusResult("", err)
 	}
 
-	return r.Client.Set(
-		ctx,
-		key,
-		normalizedValue,
-		ttl,
-	)
-}
+	cmd := c.Client.Set(ctx, key, normalizedValue, ttl)
 
-func (r *Redis) Exist(ctx context.Context, key string) (bool, error) {
-	cmd := r.Client.Exists(ctx, key)
+	c.recordMetrics(ctx, "SET", startTime, cmd.Err())
 
 	if cmd.Err() != nil {
+		observability.SetSpanError(span, cmd.Err())
+		c.logger.Error("redis SET failed", zap.String("key", key), zap.Error(cmd.Err()))
+	} else {
+		observability.SetSpanOK(span)
+	}
+
+	return cmd
+}
+
+// Del deletes keys with tracing.
+func (c *Client) Del(ctx context.Context, keys ...string) *redis.IntCmd {
+	ctx, span := c.tracer.StartWithAttributes(ctx, "redis.DEL",
+		attribute.String("db.system", "redis"),
+		attribute.String("db.operation", "DEL"),
+		attribute.Int("db.redis.key_count", len(keys)),
+	)
+	defer span.End()
+
+	startTime := time.Now()
+	cmd := c.Client.Del(ctx, keys...)
+
+	c.recordMetrics(ctx, "DEL", startTime, cmd.Err())
+
+	if cmd.Err() != nil {
+		observability.SetSpanError(span, cmd.Err())
+	} else {
+		observability.SetSpanOK(span)
+	}
+
+	return cmd
+}
+
+// Exist checks if a key exists with tracing.
+func (c *Client) Exist(ctx context.Context, key string) (bool, error) {
+	ctx, span := c.tracer.StartWithAttributes(ctx, "redis.EXISTS",
+		attribute.String("db.system", "redis"),
+		attribute.String("db.operation", "EXISTS"),
+		attribute.String("db.redis.key", key),
+	)
+	defer span.End()
+
+	startTime := time.Now()
+	cmd := c.Client.Exists(ctx, key)
+
+	c.recordMetrics(ctx, "EXISTS", startTime, cmd.Err())
+
+	if cmd.Err() != nil {
+		observability.SetSpanError(span, cmd.Err())
 		return false, cmd.Err()
 	}
 
+	observability.SetSpanOK(span)
 	return cmd.Val() == 1, nil
 }
 
-func (r *Redis) Remember(ctx context.Context, key string, ttl time.Duration, f func() (any, error)) *redis.StringCmd {
-	if cmd := r.Get(ctx, key); cmd.Err() == nil {
+// Remember implements cache-aside pattern with tracing.
+func (c *Client) Remember(ctx context.Context, key string, ttl time.Duration, f func() (any, error)) *redis.StringCmd {
+	ctx, span := c.tracer.StartWithAttributes(ctx, "redis.Remember",
+		attribute.String("db.system", "redis"),
+		attribute.String("db.operation", "REMEMBER"),
+		attribute.String("db.redis.key", key),
+	)
+	defer span.End()
+
+	// Try to get from cache first
+	if cmd := c.Get(ctx, key); cmd.Err() == nil {
+		span.SetAttributes(attribute.Bool("cache_hit", true))
 		return cmd
 	} else if !errors.Is(cmd.Err(), redis.Nil) {
-		return cmd // Return any error that's not a cache miss
+		observability.SetSpanError(span, cmd.Err())
+		return cmd
 	}
 
+	span.SetAttributes(attribute.Bool("cache_hit", false))
+
+	// Cache miss - execute function
 	v, err := f()
-
 	if err != nil {
+		observability.SetSpanError(span, err)
 		return redis.NewStringResult("", err)
 	}
 
-	normalizedValue, err := r.normalize(v)
-
+	normalizedValue, err := c.normalize(v)
 	if err != nil {
+		observability.SetSpanError(span, err)
 		return redis.NewStringResult("", err)
 	}
 
-	result := r.Set(ctx, key, normalizedValue, ttl)
-
+	// Store in cache
+	result := c.Set(ctx, key, normalizedValue, ttl)
 	if result.Err() != nil {
+		observability.SetSpanError(span, result.Err())
 		return redis.NewStringResult("", result.Err())
 	}
 
-	// Convert the value to string and return it directly
-	// This avoids an unnecessary round trip to Redis
+	observability.SetSpanOK(span)
 	return redis.NewStringResult(string(normalizedValue), nil)
 }
 
-func (r *Redis) Forever(ctx context.Context, key string, f func() (any, error)) *redis.StringCmd {
-	return r.Remember(ctx, key, 0, f)
+// Forever stores a value without expiration.
+func (c *Client) Forever(ctx context.Context, key string, f func() (any, error)) *redis.StringCmd {
+	return c.Remember(ctx, key, 0, f)
 }
 
-func (r *Redis) normalize(value any) ([]byte, error) {
-	// 1. Handle nil explicitly
-	if value == nil {
-		return nil, nil // Represent nil as nil []byte (Redis command might store "(nil)" or empty)
-		// Alternatively: return []byte{}, nil // Represent nil as empty byte slice
+// Transaction acquires a distributed lock and executes function.
+func (c *Client) Transaction(ctx context.Context, key string, f func(tx *Client) error) error {
+	ctx, span := c.tracer.StartWithAttributes(ctx, "redis.Transaction",
+		attribute.String("db.system", "redis"),
+		attribute.String("db.operation", "LOCK"),
+		attribute.String("db.redis.lock_key", key),
+	)
+	defer span.End()
+
+	ctx, cancel := context.WithDeadline(ctx, time.Now().Add(time.Minute*2))
+	defer cancel()
+
+	lock, err := c.lock.Obtain(ctx, key+"-lock", time.Minute*2, &redislock.Options{
+		RetryStrategy: redislock.LimitRetry(redislock.LinearBackoff(500*time.Millisecond), 10),
+	})
+	if err != nil {
+		observability.SetSpanError(span, err)
+		c.logger.Error("failed to obtain lock", zap.String("key", key), zap.Error(err))
+		return fmt.Errorf("obtain lock: %w", err)
 	}
 
-	// 2. Check for standard marshaling interfaces first for custom type handling
-	// If a type implements these, it knows best how to represent itself.
+	defer func() {
+		if releaseErr := lock.Release(ctx); releaseErr != nil {
+			c.logger.Warn("failed to release lock", zap.String("key", key), zap.Error(releaseErr))
+		}
+	}()
+
+	if err := f(c); err != nil {
+		observability.SetSpanError(span, err)
+		return err
+	}
+
+	observability.SetSpanOK(span)
+	return nil
+}
+
+// Ping checks Redis connection.
+func (c *Client) Ping(ctx context.Context) error {
+	ctx, span := c.tracer.StartWithAttributes(ctx, "redis.PING",
+		attribute.String("db.system", "redis"),
+		attribute.String("db.operation", "PING"),
+	)
+	defer span.End()
+
+	cmd := c.Client.Ping(ctx)
+	if cmd.Err() != nil {
+		observability.SetSpanError(span, cmd.Err())
+		return cmd.Err()
+	}
+
+	observability.SetSpanOK(span)
+	return nil
+}
+
+// Close closes the Redis connection.
+func (c *Client) Close() error {
+	return c.Client.Close()
+}
+
+// PoolStats returns connection pool statistics.
+func (c *Client) PoolStats() *redis.PoolStats {
+	return c.Client.PoolStats()
+}
+
+func (c *Client) recordMetrics(ctx context.Context, operation string, startTime time.Time, err error) {
+	duration := time.Since(startTime).Seconds()
+	attrs := metric.WithAttributes(attribute.String("operation", operation))
+
+	c.metrics.OperationTime.Record(ctx, duration, attrs)
+
+	if err != nil && !errors.Is(err, redis.Nil) {
+		c.metrics.ErrorsTotal.Add(ctx, 1, attrs)
+	}
+}
+
+func (c *Client) normalize(value any) ([]byte, error) {
+	if value == nil {
+		return nil, nil
+	}
+
 	if marshaler, ok := value.(encoding.BinaryMarshaler); ok {
 		data, err := marshaler.MarshalBinary()
 		if err != nil {
@@ -164,7 +311,7 @@ func (r *Redis) normalize(value any) ([]byte, error) {
 		}
 		return data, nil
 	}
-	// time.Time implements TextMarshaler, good example
+
 	if marshaler, ok := value.(encoding.TextMarshaler); ok {
 		data, err := marshaler.MarshalText()
 		if err != nil {
@@ -173,20 +320,12 @@ func (r *Redis) normalize(value any) ([]byte, error) {
 		return data, nil
 	}
 
-	// 3. Handle common types directly for performance and Redis compatibility
 	switch v := value.(type) {
 	case []byte:
-		// If the input slice might be modified later by the caller,
-		// you might want to return a copy:
-		// clone := make([]byte, len(v))
-		// copy(clone, v)
-		// return clone, nil
-		// For max performance (assuming caller won't modify):
 		return v, nil
 	case string:
 		return []byte(v), nil
 	case int:
-		// AppendInt is efficient; appends to nil slice, avoids intermediate string
 		return strconv.AppendInt(nil, int64(v), 10), nil
 	case int64:
 		return strconv.AppendInt(nil, v, 10), nil
@@ -204,19 +343,17 @@ func (r *Redis) normalize(value any) ([]byte, error) {
 		return strconv.AppendUint(nil, uint64(v), 10), nil
 	case uint16:
 		return strconv.AppendUint(nil, uint64(v), 10), nil
-	case uint8: // byte is an alias for uint8
+	case uint8:
 		return strconv.AppendUint(nil, uint64(v), 10), nil
 	case float64:
-		// 'g' format is usually suitable, -1 precision means shortest necessary
 		return strconv.AppendFloat(nil, v, 'g', -1, 64), nil
 	case float32:
 		return strconv.AppendFloat(nil, float64(v), 'g', -1, 32), nil
 	case bool:
 		if v {
-			return []byte("1"), nil // Common representation for true
+			return []byte("1"), nil
 		}
-		return []byte("0"), nil // Common representation for false
-	// --- Optional: Handle pointers to basic types ---
+		return []byte("0"), nil
 	case *string:
 		if v == nil {
 			return nil, nil
@@ -227,14 +364,9 @@ func (r *Redis) normalize(value any) ([]byte, error) {
 			return nil, nil
 		}
 		return strconv.AppendInt(nil, *v, 10), nil
-	// ... add other pointer types (*int, *float64, *bool etc.) if needed
-
-	// 4. Fallback to JSON for complex types (structs, maps, slices/arrays, etc.)
 	default:
-		// fmt.Printf("Normalizing type %T using JSON\n", v) // Debugging line
 		b, err := json.Marshal(v)
 		if err != nil {
-			// IMPORTANT: Return the error instead of ignoring it!
 			return nil, fmt.Errorf("normalize: failed marshaling to JSON for type %T: %w", v, err)
 		}
 		return b, nil

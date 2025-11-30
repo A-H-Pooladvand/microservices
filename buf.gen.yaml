@@ -1,9 +1,15 @@
-version: v1
+version: v2
+
+managed:
+  enabled: true
+  override:
+    - file_option: go_package_prefix
+      value: github.com/a-h-pooladvand/microservices/api
 
 plugins:
-  - plugin: go
+  - local: protoc-gen-go
     out: api
     opt: paths=source_relative
-  - plugin: go-grpc
+  - local: protoc-gen-go-grpc
     out: api
     opt: paths=source_relative

@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"github.com/a-h-pooladvand/microservices/api/ping/v1"
-	"github.com/a-h-pooladvand/microservices/api/user/v1"
+	ping "github.com/a-h-pooladvand/microservices/api/ping/v1"
+	user "github.com/a-h-pooladvand/microservices/api/user/v1"
 	"github.com/a-h-pooladvand/microservices/internal/handler"
 	"google.golang.org/grpc"
 )
